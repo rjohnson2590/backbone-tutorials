@@ -1,0 +1,22 @@
+#+TITLE: A Backbone Tutorial
+#+OPTIONS: toc:nil
+
+* Introduction to This Tutorial
+  In these notes we'll be covering several major topics: 
+
+  + Organizing client-side code using Backbone
+  + Communicating with a Node server using Backbone and jQuery
+  + Syncing our data to a persistent store, in the form of a MongoDB database
+
+For the first part, we're only presuming a small amount of base jQuery knowledge. In our second part, we'll be assuming some familiarity with Node but will include at least some review of the functions that we're using as we use them. For our final part, we'll be including a modest introduction to the functionality of MongoDB that we require for building our application. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we're developing. As this tutorial is written using [[http://orgmode.org/][org-mode]]'s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command ~C-c C-v C-t~. PDF and Markdown copies of this tutorial will also be included in the repository. 
+* The Overall Point of Backbone
+  When writing interactive sites, there's always going to be some form of /data/ being manipulated. If we're Twitter, there's users, tweets, followers, lists etc. If we're a photosharing site such as Flickr or Instagram then there's going to be users and images as some of the most important data stored, and there's tags on the images that can be used to search. Essentially any website you'll be using has some kind of data that needs to be loaded from the server.
+
+  Of course, you'll need a few things to *use* this data in your application effectively. First off, you'll need some kind of local representation of the data on the client. In order to have a responsive site, you can't just go back to the server any time you need your data. You'll also want to display this data, maybe keep this data in some kind of list, sort lists of data, and sync your data with the server and possibly a database every time the data changes. In principle, you don't need any special library to do all of these things! You can use regular Javascript objects and write the necessary code to handle display of information, interaction with the dom, and interaction with the server for each object!
+
+  Or you could use something like Backbone, which gives you a lot of pre-built machinery for doing all of these tasks. I want to stress that Backbone /doesn't/ do anything that you couldn't do yourself and, indeed, if you're talking about very small programs it might actually be easier to write just a small bit of code yourself. 
+
+  Backbone divides these common tasks into two major pieces: models and views. These terms come from the idea of [[http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller][Model-View-Controller]] frameworks. Essentially, the model is the piece that controls the data and communicates with the server. The view is the piece that controls how the data is displayed and connects the user interface to the model.
+
+* Your First Backbone Application
+  As this is going to be our very *first* Backbone application, we're not even going to have a server as a backend for the client. Instead, let's go ahead and 
