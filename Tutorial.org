@@ -16,7 +16,89 @@ For the first part, we're only presuming a small amount of base jQuery knowledge
 
   Or you could use something like Backbone, which gives you a lot of pre-built machinery for doing all of these tasks. I want to stress that Backbone /doesn't/ do anything that you couldn't do yourself and, indeed, if you're talking about very small programs it might actually be easier to write just a small bit of code yourself. 
 
-  Backbone divides these common tasks into two major pieces: models and views. These terms come from the idea of [[http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller][Model-View-Controller]] frameworks. Essentially, the model is the piece that controls the data and communicates with the server. The view is the piece that controls how the data is displayed and connects the user interface to the model.
+  Backbone divides these common tasks into two major pieces: models and views. These terms come from the idea of [[http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller][Model-View-Controller]] frameworks. Essentially, the model is the piece that controls the data and communicates with the server. The view is the piece that controls how the data is displayed and connects the user interface to the model. Also, since "lists-of-things" such as
+  + lists of tweets
+  + lists of users
+  + lists of movies
+  + ...
+are so ubiquitous in web applications, Backbone has built in support for special kinds of models called "collections". Essentially, a collection is a super-model made up of an array of other models and has built in methods for maintaining that array of models and keeping them all properly sync'ed.
 
-* Your First Backbone Application
-  As this is going to be our very *first* Backbone application, we're not even going to have a server as a backend for the client. Instead, let's go ahead and 
+* Installation
+  In order to get started, you need to download the following files and place them in the ~../js~ directory of this repository
+  + [[http://backbonejs.org/backbone.js][Backbone]]
+  + [[http://underscorejs.org/underscore.js][Underscore]]
+  + [[http://code.jquery.com/jquery-2.1.4.js][jQuery]]
+or, at least on Linux but possibly OS X if you have "wget" installed, you should be able to run the following shell command to install all of this software locally
+#+BEGIN_SRC sh :exports code :results none
+    cd js && 
+    wget http://backbonejs.org/backbone.js && 
+    wget http://underscorejs.org/underscore.js && 
+    wget http://code.jquery.com/jquery-2.1.4.js
+#+END_SRC
+
+* Your First Backbone Project
+  In this brief project, we're going to create a client side application that will
+  + display a number
+  + provide a button that allows you to /increase/ the number in the counter
+
+What we're going to cover in this section is: 
+  + How to create routes that will translate urls to the pages we want
+  + How to create Backbone models and views
+    + Learn about the specific ~get~ and ~set~ methods for Backbone models
+  + How to render HTML using a view
+  + How to connect a model to a view
+  + How to use events to ensure that the *view* updates when the *model* changes
+
+First things first, we need to have our base HTML for the application. In this case, we're going to have a rather simple HTML page that initially contains a ~<div>~ where we're going to place our counter and a button that we'll use to increment the counter.
+
+#+BEGIN_SRC html :exports code :tangle counter.html
+  <!doctype html>
+  <html>
+    <head>
+      <title>A Counter Example</title>
+      <script type="text/javascript" src="js/jquery-2.1.4.js">
+      <script type="text/javascript" src="js/underscore.js">
+      <script type="text/javascript" src="js/backbone.js">
+      <script type="text/javascript" src="counter.js">
+    </head>
+    <body>
+      <div id="counterdiv"></div>
+      <button>Increment</button>
+    </body>
+  </html>
+#+END_SRC
+
+Now, the first thing we're going to do is build our /model/. As discussed in our introduction, a model is the thing that *contains* data in our application. All models are built by calling ~Backbone.Model.extend(some-object-with-built-in-data)~. We'll talk about the kinds of things we put in ~Backbone.Model.extend~ as we need them, but to begin with we're going to have a very *simple* model: our goal is to have a single special property called "value" that will contain the value of the counter and is going to be modified by our button. To that end, we are going to include the single property ~defaults~, which is a list of default values for the special data of our application. 
+#+BEGIN_SRC js :exports code :tangle counter.js
+  var Counter = Backbone.Model.extend({
+      defaults : {"value" : 0}
+  });
+#+END_SRC
+This might look a little bit odd, but in order to use Backbone's system of events we need to not 
+
+** Exercises
+*** Subtraction Button
+*** Clear Button
+*** Concatenating Text Field
+    
+
+* Your Second Backbone Project
+  In this project, we're going to again create a /client side only/ application that
+  + displays a list of items
+  + contains a text field and a submit button that will add the entered text to the list
+
+What we're going to cover in this section is:
+  + How to create a Backbone /collection/ of models
+  + How to create 
+
+First things first, we're going to create a small HTML
+
+#+BEGIN_SRC html :exports 
+
+#+END_SRC
+ 
+** Exercises
+*** Delete Button
+    In this exercise, we're going to add a "delete" button that will erase the top element of the 
+*** Adding a Counter
+    In this exercise, you're going 
