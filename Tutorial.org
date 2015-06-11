@@ -1,27 +1,67 @@
 #+TITLE: A Backbone Tutorial
-#+OPTIONS: toc:nil
+#+OPTIONS: toc:nil tex:t
 
 * Introduction to This Tutorial
   In these notes we'll be covering several major topics: 
 
   + Organizing client-side code using Backbone
-  + Communicating with a Node server using Backbone and jQuery
+  + Communicating with a Node server using Backbone
   + Syncing our data to a persistent store, in the form of a MongoDB database
 
 For the first part, we're only presuming a small amount of base jQuery knowledge. In our second part, we'll be assuming some familiarity with Node but will include at least some review of the functions that we're using as we use them. For our final part, we'll be including a modest introduction to the functionality of MongoDB that we require for building our application. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we're developing. As this tutorial is written using [[http://orgmode.org/][org-mode]]'s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command ~C-c C-v C-t~. PDF and Markdown copies of this tutorial will also be included in the repository. 
 * The Overall Point of Backbone
-  When writing interactive sites, there's always going to be some form of /data/ being manipulated. If we're Twitter, there's users, tweets, followers, lists etc. If we're a photosharing site such as Flickr or Instagram then there's going to be users and images as some of the most important data stored, and there's tags on the images that can be used to search. Essentially any website you'll be using has some kind of data that needs to be loaded from the server.
+  If you're reading this, then it's likely that your ultimate goal is to understand how to make interactive web sites. One of the difficulties in writing larger and more complex sites is keeping all the code principled and well-organized. For example, consider the way that in templates you can have something like
+#+BEGIN_SRC jade :exports code
+  body
+    if someVariable
+      p (HTML to render if the variable was true)
+    else
+      p (HTML to render if the variable wasn't true')
+#+END_SRC
+or you could have, at the javascript level, an if-statement like
+#+BEGIN_SRC js :exports code
+  if (someVariable){
+      response.render('one-thing');
+  }
+  else {
+      response.render('another-thing');
+  }
+#+END_SRC
 
-  Of course, you'll need a few things to *use* this data in your application effectively. First off, you'll need some kind of local representation of the data on the client. In order to have a responsive site, you can't just go back to the server any time you need your data. You'll also want to display this data, maybe keep this data in some kind of list, sort lists of data, and sync your data with the server and possibly a database every time the data changes. In principle, you don't need any special library to do all of these things! You can use regular Javascript objects and write the necessary code to handle display of information, interaction with the dom, and interaction with the server for each object!
+There are two different places where we could make the decision on what HTML to render by examining the same variable's value. Is one better than the other? That's a matter of opinion. What's less controversial is that you *don't* want to have a mix of logic in different places. If your project is putting lots of logic in the templates, you don't want to add a new page and have its display logic in the route handler or visa versa because your teammates (or yourself in a week's time) won't know where to look. 
 
-  Or you could use something like Backbone, which gives you a lot of pre-built machinery for doing all of these tasks. I want to stress that Backbone /doesn't/ do anything that you couldn't do yourself and, indeed, if you're talking about very small programs it might actually be easier to write just a small bit of code yourself. 
+This problem becomes much more pronounced when we consider that sites these days deal with many different kinds of /data/. If we're Twitter, there's users, tweets, followers, lists etc. If we're a photosharing site such as Flickr or Instagram then there's going to be users and images as some of the most important data stored, and there's tags on the images that can be used to search. Essentially any website you'll be using has some kind of data that needs to be recorded in a database, loaded from the server to the client, displayed by rendering HTML, and then modified using the UI of the site, which we can look at as a reversal of the same path back from the DOM down to the server.
 
-  Backbone divides these common tasks into two major pieces: models and views. These terms come from the idea of [[http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller][Model-View-Controller]] frameworks. Essentially, the model is the piece that controls the data and communicates with the server. The view is the piece that controls how the data is displayed and connects the user interface to the model. Also, since "lists-of-things" such as
-  + lists of tweets
-  + lists of users
-  + lists of movies
-  + ...
-are so ubiquitous in web applications, Backbone has built in support for special kinds of models called "collections". Essentially, a collection is a super-model made up of an array of other models and has built in methods for maintaining that array of models and keeping them all properly sync'ed.
+For each kind of data, tweets, users, images, etc. that entire pipeline of
+#+BEGIN_EXAMPLE
+  server <===> client code <===> DOM
+#+END_EXAMPLE
+needs to be handled. There's many possibilities for *how* you organize the code that creates this pipeline, though, and potentially a lot of duplicated code when trying to create a framework that works for all the kinds of data in your application. This is where the concept of /separation of concerns/ comes in. We're going to further divide the central "client code" part of our diagram into two components: the /model/ and the /view/, which means our diagram is going to instead look like
+#+BEGIN_EXAMPLE
+  server <===> model <===> view <===> DOM
+#+END_EXAMPLE
+where the /model/ is the part that contains *a particular piece of data* on the client side (a tweet, an image, a user profile) and controls syncing the client and server data together, and the /view/ is the part that creates the HTML for display the data *and* handles UI actions that will modify the data in the model. 
+
+If we divide things this way, the job of knowing how to write our code gets a bit simpler. If we're writing code that's syncing data with the server, that needs to go into our "model" code for that type of data. If we're writing code that's building the user interface dynamically from data, such as a list of tweets, then that needs to go in our "view" code. 
+
+Of course, there's going to be a lot of replication if we perform this model/view division for all the data in our web app and we *certainly* don't want to write a new framework for each application we work on. We also need to write the glue code that allows the server to communicate with the models, the models communicate with the views, and the views communicate with the DOM. This is where Backbone comes in. 
+
+Backbone is a library that comes with pre-defined model and view classes that you can easily customize for your particular application, with built in code and techniques to keep the models and views in sync with each other. As such, Backbone actually has a lot of the tedious code to setup this model/view dichotomy written once and for all, leaving you to worry about the specifics of your application and not the general problem of separating concerns. B
+
+In this tutorial, we'll be covering how to use Backbone for applications. We'll be covering how to 
+  + extend Backbone models
+  + extend Backbone views
+  + connect views to models
+  + use events to synchronize models and views
+  + use models to communicate with the server
+  + render views and insert them into the DOM
+
+The structure of this tutorial is that we'll start first by leaving off the server, so instead we'll be examining just this picture
+#+BEGIN_EXAMPLE
+  model <===> view <===> DOM
+#+END_EXAMPLE
+and then after getting more comfortable with that picture, we'll add in a server and a database. 
+
 
 * Installation
   In order to get started, you need to download the following files and place them in the ~../js~ directory of this repository
@@ -30,10 +70,11 @@ are so ubiquitous in web applications, Backbone has built in support for special
   + [[http://code.jquery.com/jquery-2.1.4.js][jQuery]]
 or, at least on Linux but possibly OS X if you have "wget" installed, you should be able to run the following shell command to install all of this software locally
 #+BEGIN_SRC sh :exports code :results none
-    cd js && 
-    wget http://backbonejs.org/backbone.js && 
-    wget http://underscorejs.org/underscore.js && 
-    wget http://code.jquery.com/jquery-2.1.4.js
+  mkdir js &&
+  cd js && 
+  wget http://backbonejs.org/backbone.js && 
+  wget http://underscorejs.org/underscore.js && 
+  wget http://code.jquery.com/jquery-2.1.4.js
 #+END_SRC
 
 * Your First Backbone Project
@@ -74,14 +115,19 @@ Now, the first thing we're going to do is build our /model/. As discussed in our
       defaults : {"value" : 0}
   });
 #+END_SRC
-This might look a little bit odd, but in order to use Backbone's system of events we need to not 
+
+You might wonder why we're using ~defaults~ and not just, say, creating a property of Counter called ~value~ like in the following code
+#+BEGIN_SRC js :exports code
+  var Counter = Backbone.Model.extend();
+  Counter.prototype.value = 0;
+#+END_SRC
+thus causing any instance of ~Counter~ to have a property ~value~ which defaults to 0. The basic reason is that we want to use Backbone's /events/ to synchronize the model and the view together. 
 
 ** Exercises
 *** Subtraction Button
 *** Clear Button
 *** Concatenating Text Field
     
-
 * Your Second Backbone Project
   In this project, we're going to again create a /client side only/ application that
   + displays a list of items
@@ -92,10 +138,6 @@ What we're going to cover in this section is:
   + How to create 
 
 First things first, we're going to create a small HTML
-
-#+BEGIN_SRC html :exports 
-
-#+END_SRC
  
 ** Exercises
 *** Delete Button
