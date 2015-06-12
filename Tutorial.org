@@ -77,39 +77,53 @@ or, at least on Linux but possibly OS X if you have "wget" installed, you should
   wget http://code.jquery.com/jquery-2.1.4.js
 #+END_SRC
 
-* Your First Backbone Project
+* Your First Backbone Project: A Simple Counter
   In this brief project, we're going to create a client side application that will
   + display a number
   + provide a button that allows you to /increase/ the number in the counter
 
 What we're going to cover in this section is: 
-  + How to create routes that will translate urls to the pages we want
   + How to create Backbone models and views
     + Learn about the specific ~get~ and ~set~ methods for Backbone models
   + How to render HTML using a view
   + How to connect a model to a view
-  + How to use events to ensure that the *view* updates when the *model* changes
+  + How to use events to ensure that the *view* updates when the *model* changes and the *model* changes when inputs in the *view* are used
+
+The basic outline is that we'll
+  1. create a model
+  2. create a view connected to this model
+  3. install our event handlers
 
 First things first, we need to have our base HTML for the application. In this case, we're going to have a rather simple HTML page that initially contains a ~<div>~ where we're going to place our counter and a button that we'll use to increment the counter.
 
+file: counter.html
+
+     
 #+BEGIN_SRC html :exports code :tangle counter.html
   <!doctype html>
   <html>
     <head>
       <title>A Counter Example</title>
-      <script type="text/javascript" src="js/jquery-2.1.4.js">
-      <script type="text/javascript" src="js/underscore.js">
-      <script type="text/javascript" src="js/backbone.js">
-      <script type="text/javascript" src="counter.js">
+      <script type="text/javascript" src="js/jquery-2.1.4.js"></script>
+      <script type="text/javascript" src="js/underscore.js"></script>
+      <script type="text/javascript" src="js/backbone.js"></script>
+      <script type="text/javascript" src="counter.js"></script>
     </head>
     <body>
       <div id="counterdiv"></div>
-      <button>Increment</button>
     </body>
   </html>
 #+END_SRC
 
+As for our javascript file ~counter.js~, don't forget to wrap up all our code in a ~$(document).ready(function () {})~.
+
+#+BEGIN_SRC js :exports none :tangle counter.js
+  $(document).ready( function () {
+#+END_SRC
+
 Now, the first thing we're going to do is build our /model/. As discussed in our introduction, a model is the thing that *contains* data in our application. All models are built by calling ~Backbone.Model.extend(some-object-with-built-in-data)~. We'll talk about the kinds of things we put in ~Backbone.Model.extend~ as we need them, but to begin with we're going to have a very *simple* model: our goal is to have a single special property called "value" that will contain the value of the counter and is going to be modified by our button. To that end, we are going to include the single property ~defaults~, which is a list of default values for the special data of our application. 
+
+file: counter.js
 #+BEGIN_SRC js :exports code :tangle counter.js
   var Counter = Backbone.Model.extend({
       defaults : {"value" : 0}
@@ -121,26 +135,95 @@ You might wonder why we're using ~defaults~ and not just, say, creating a proper
   var Counter = Backbone.Model.extend();
   Counter.prototype.value = 0;
 #+END_SRC
-thus causing any instance of ~Counter~ to have a property ~value~ which defaults to 0. The basic reason is that we want to use Backbone's /events/ to synchronize the model and the view together. 
+thus causing any instance of ~Counter~ to have a property ~value~ which defaults to 0. The basic reason is that we want to use Backbone's /events/ to synchronize the model and the view together. In order to use Backbone events, we don't want to use the built in syntax for object properties but rather the ~.get()~ and ~.set()~ methods instead.
+
+The next thing we do in our code is make a /view/, which is going to be similar to be very similar to a model with the exception that we need to define its ~render~ function, which actually generates HTML from the data in the associated model. We've already decided, using our ~defaults~ property when creating the ~Counter~ class, that all counters are going to have a property called ~value~ which holds the value of the counter. 
+
+#+BEGIN_SRC js :exports code :tangle counter.js
+  var CounterView = Backbone.View.extend({
+      render: function () {
+          var val = this.model.get("value");
+          var btn = '<button>Increment</button>';
+          this.$el.html('<p>'+val+'</p>' + btn);
+      }
+  });
+#+END_SRC
+
+The next thing we need to do is actually create instances of both our model and a view attached to said model:
+
+#+BEGIN_SRC js :exports code :tangle counter.js
+  var counterModel = new Counter();
+
+  var counterView = new CounterView({model : counterModel});
+  counterView.render();
+#+END_SRC
+
+We're almost done, but we still need to set our event handlers. The first one that we're going to do is the ~model~ event "change", which will fire whenever an attribute of the model changes:
+#+BEGIN_SRC js :exports code :tangle counter.js
+  counterModel.on("change", function () {
+      counterView.render();
+  });
+#+END_SRC
+Specifically, we're saying that whenever the model changes the only thing we need to do is re-render the associated view. This takes care of the direction of 
+#+BEGIN_EXAMPLE
+model ===> view ===> DOM
+#+END_EXAMPLE
+but what about the reverse direction?
+To do that, we're going to install an event handler on the button so that whenever it is clicked, the counter will increment
+#+BEGIN_SRC js :exports code  :tangle counter.js
+  counterView.$el.on("button click", function () {
+      var mod = counterView.model;
+      var currVal = mod.get("value");
+      mod.set("value",currVal+1);
+  });
+#+END_SRC
+
+
+Finally, we run the code that inserts the ~$el~ element of the view into the DOM
+
+#+BEGIN_SRC js :exports code :tangle counter.js
+  $("#counterdiv").append(counterView.$el);
+#+END_SRC
+
+#+BEGIN_SRC js :exports none :tangle counter.js
+  });
+#+END_SRC
+
+Now, all that's left is to load our page and take a look!
 
 ** Exercises
 *** Subtraction Button
 *** Clear Button
 *** Concatenating Text Field
     
-* Your Second Backbone Project
+* Collections Project: Text Lists
   In this project, we're going to again create a /client side only/ application that
   + displays a list of items
   + contains a text field and a submit button that will add the entered text to the list
 
 What we're going to cover in this section is:
   + How to create a Backbone /collection/ of models
-  + How to create 
-
-First things first, we're going to create a small HTML
- 
+  + How to create view for a collection
+  + How to make the collection's view delegate to individual views
+  + How to use the collection specific events for
+    + adding
+    + removing
+    + resetting 
 ** Exercises
 *** Delete Button
     In this exercise, we're going to add a "delete" button that will erase the top element of the 
 *** Adding a Counter
     In this exercise, you're going 
+* Server Side Project: Counter With Server
+  In this section, we're going to show how to connect our first counter example with a simple Node server. By the end of this section we'll have shown
+  + set the 
+* Server Side Project: Collections and Databases
+  In our final section, we'll be covering
+  + Backbone's Router class for providing nice URLs on the client side
+  + How to use IDs in URLs to index into collections
+  + What a full, but small, client-server application looks like in Backbone
+** Exercises
+*** Grocery List App
+    Our final set of exercises contains just a single task: create a small application from which users can log in, enter a new grocery list, access past grocery lists and sort items in grocery lists by some criterion.
+
+    
