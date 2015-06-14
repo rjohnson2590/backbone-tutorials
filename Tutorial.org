@@ -62,7 +62,6 @@ The structure of this tutorial is that we'll start first by leaving off the serv
 #+END_EXAMPLE
 and then after getting more comfortable with that picture, we'll add in a server and a database. 
 
-
 * Installation
   In order to get started, you need to download the following files and place them in the ~../js~ directory of this repository
   + [[http://backbonejs.org/backbone.js][Backbone]]
@@ -78,6 +77,7 @@ or, at least on Linux but possibly OS X if you have "wget" installed, you should
 #+END_SRC
 
 * Your First Backbone Project: A Simple Counter
+** Outline
   In this brief project, we're going to create a client side application that will
   + display a number
   + provide a button that allows you to /increase/ the number in the counter
@@ -93,7 +93,7 @@ The basic outline is that we'll
   1. create a model
   2. create a view connected to this model
   3. install our event handlers
-
+** Lesson and Example Code
 First things first, we need to have our base HTML for the application. In this case, we're going to have a rather simple HTML page that initially contains a ~<div>~ where we're going to place our counter and a button that we'll use to increment the counter.
 
 file: counter.html
@@ -281,8 +281,15 @@ Now! We can go ahead and make our models and views and insert them into the DOM.
   });
 #+END_SRC
 
+** Questions To Think About
+   1. Why do we include the increment button in the view and not the base HTML?
+   2. Think about sites you use frequently and sketch out how they might be divided into
+      * models
+      * views
+      * events
 * Collections Project: Text Lists
-  In this project, we're going to again create a /client side only/ application that
+** Outline
+In this project, we're going to again create a /client side only/ application that
   + displays a list of items
   + contains a text field and a submit button that will add the entered text to the list
 
@@ -293,12 +300,121 @@ What we're going to cover in this section is:
   + How to use the collection specific events for
     + adding
     + removing
-    + resetting 
+    + resetting
+** Lesson and Code
+When you're dealing with sites like twitter, or instagram, or anythig of that ilk there tend to be *collections* of things. You're reading a /list/ of tweets, looking at a /list/ of search results, examining a /list/ of photos that match a tag, checking a /list/ of followers etc. 
+
+In other words, there's a lot of "list-like" things in the data that we're seeing constantly online. This is such a common pattern that Backbone has, built-in, a /Collection/ class that allows you to have "lists" of models that can listen for special list-specific events such as adding or removing from the list. 
+
+We're going to start our application very similar to how our previous project started: with some very simple HTML. [fn:1]
+
+#+BEGIN_SRC html :exports code :tangle textlist.html
+  <!doctype html>
+  <html>
+    <head>
+      <title>Text in Lists</title>
+      <script type="text/javascript" src="js/jquery-2.1.4.js"></script>
+      <script type="text/javascript" src="js/underscore.js"></script>
+      <script type="text/javascript" src="js/backbone.js"></script>
+      <script type="text/javascript" src="textlist.js"></script>
+    </head>
+    <body>
+      <div id="listdiv"></div>
+    </body>
+  </html>
+#+END_SRC
+ 
+Next, we'll start with our basic model of a piece of text. It'll have a "replace" method that will replace the text inside it, but no others for now. It's individual view is going to be an input with the default text of the input set to the value of the model and a "edit" button that will set the model to be the current value of the text field. This part is basically the same as our previous project
+
+#+BEGIN_SRC js :exports none :tangle textlist.js
+  $(document).ready( function () {
+#+END_SRC
+
+#+BEGIN_SRC js :exports code :tangle textlist.js
+  var TextModel = Backbone.Model.extend({
+      defaults : {"value" : ""}
+  });
+
+  TextModel.prototype.replace = function (str) {
+      this.set("value", str);
+  };
+
+  var TextView = Backbone.View.extend({
+      render: function () {
+          var textVal = this.model.get("value");
+          var btn = '<button>Edit</button>';
+          var input = '<input type="text" value="' + textVal + '" />';
+          this.$el.html("<div>" + input + btn + "</div>");
+      },
+      initialize: function () {
+          this.model.on("change", this.render, this);
+      },
+      events : {
+          "click button" : "replace"
+      },
+      replace : function () {
+          var str = this.$el.find("input").val();
+          this.model.replace(str);
+      }
+  });
+#+END_SRC
+
+Next, we actually define the collection. This is pretty similar to all the other Backbone classes that we extend:
+#+BEGIN_SRC js :exports code :tangle textlist.js
+  var TextCollection = Backbone.Collection.extend({
+      model : TextModel
+  });
+#+END_SRC
+After this. we need to make our view for the *collection* and write our event handlers for the collection. The view for the collection will display all of our individual views as well have a button that will add a new "blank" text field into our page (with the default text "Enter something here").
+#+BEGIN_SRC js :exports code :tangle textlist.js
+  var TextCollectionView = Backbone.View.extend({
+      render : function () {
+          var btn = '<button id="addbutton">Add Text</button>';
+          var div = '<div id="text-list"></div>';
+          this.$el.html(div + btn);
+      },
+      initialize : function () {
+          this.listenTo(this.collection, 'add', this.addOne);
+      },
+      events : {
+          "click #addbutton" : "addCollection"
+      },
+      addOne : function (txt) {
+          txt.set("value","Enter something here...");
+          var view = new TextView({model : txt});
+          view.render();
+          this.$("#text-list").append(view.$el);
+      },
+      addCollection : function () {
+          this.collection.create();
+      }
+  });
+#+END_SRC
+
+Finally, we go ahead and run the code we need to initialize everything:
+
+#+BEGIN_SRC js :exports code :tangle textlist.js
+  var textCollection = new TextCollection();
+
+  var textCollectionView = new TextCollectionView({ collection : textCollection});
+
+  textCollectionView.render();
+
+  $("#listdiv").append(textCollectionView.$el);
+#+END_SRC
+
+#+BEGIN_SRC js :exports none :tangle textlist.js
+  });
+#+END_SRC
+
 ** Exercises
 *** Delete Button
-    In this exercise, we're going to add a "delete" button that will erase the top element of the 
-*** Adding a Counter
-    In this exercise, you're going 
+    In this exercise, we're going to add a "delete" button that will erase the top element of the list of elements. To do that, you're going to need to 
+   + add a delete button to the view of the *collection*
+   + add a event handler that listens for the "remove" event for the collection and refreshes the list
+*** Edited Count
+    In this exercise, you're going to add a new piece of data to the *base* model
+
 * Server Side Project: Counter With Server
   In this section, we're going to show how to connect our first counter example with a simple Node server. By the end of this section we'll have shown
   + set the 
@@ -310,5 +426,10 @@ What we're going to cover in this section is:
 ** Exercises
 *** Grocery List App
     Our final set of exercises contains just a single task: create a small application from which users can log in, enter a new grocery list, access past grocery lists and sort items in grocery lists by some criterion.
+
+* Footnotes
+
+[fn:1] This section of the tutorial is partially inspired by the backbone "todo list" tutorial http://backbonejs.org/docs/todos.html
+
 
     
