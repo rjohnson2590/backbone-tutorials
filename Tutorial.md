@@ -280,16 +280,24 @@ What we&rsquo;re going to cover in this section is:
 -   How to create a Backbone *collection* of models
 -   How to create view for a collection
 -   How to make the collection&rsquo;s view delegate to individual views
--   How to use the collection specific events for
-    -   adding
-    -   removing
-    -   resetting
+-   How to use the collection specific events to keep the view in-sync
 
 ## Lesson and Code
 
 When you&rsquo;re dealing with sites like twitter, or instagram, or anythig of that ilk there tend to be **collections** of things. You&rsquo;re reading a *list* of tweets, looking at a *list* of search results, examining a *list* of photos that match a tag, checking a *list* of followers etc. 
 
 In other words, there&rsquo;s a lot of &ldquo;list-like&rdquo; things in the data that we&rsquo;re seeing constantly online. This is such a common pattern that Backbone has, built-in, a *Collection* class that allows you to have &ldquo;lists&rdquo; of models that can listen for special list-specific events such as adding or removing from the list. 
+
+The basic way that Backbone *collections* work is that you associate to each collection the kind of **model** that it&rsquo;s a list of. You still have individual views for each model, though, and we leave the bulk of the work for handling the display and manipulation of data to the **individual** model/view pairs. We&rsquo;ll also have a view for the **collection**, that will handle how the list is displayed. To this end, we&rsquo;re going to proceed by
+
+1.  writing our base html
+2.  defining the model and view for our text data
+3.  define the collection for the text data model
+    -   this part will be rather simple and bare bones in comparison to the view
+4.  define the *view* for our collection
+    -   the view will include the framework for displaying the list
+    -   the view will also include the button that adds a new element to the collection
+        -   this will trigger the `add` event for the collection
 
 We&rsquo;re going to start our application very similar to how our previous project started: with some very simple HTML. <sup><a id="fnr.1" name="fnr.1" class="footref" href="#fn.1">1</a></sup>
 
@@ -307,7 +315,7 @@ We&rsquo;re going to start our application very similar to how our previous proj
       </body>
     </html>
 
-Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll have a &ldquo;replace&rdquo; method that will replace the text inside it, but no others for now. It&rsquo;s individual view is going to be an input with the default text of the input set to the value of the model and a &ldquo;edit&rdquo; button that will set the model to be the current value of the text field. This part is basically the same as our previous project
+Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll have a &ldquo;replace&rdquo; method that will replace the text inside it, but no others for now. It&rsquo;s individual view is going to be an input with the default text of the input set to the value of the model and a &ldquo;edit&rdquo; button that will set the model to be the current value of the text field. This part is basically the same as our previous project.
 
     var TextModel = Backbone.Model.extend({
         defaults : {"value" : ""}
@@ -336,13 +344,13 @@ Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll hav
         }
     });
 
-Next, we actually define the collection. This is pretty similar to all the other Backbone classes that we extend:
+Next, we actually define the collection. This is pretty similar to all the other Backbone classes that we extend, just with the special attribute `model` that we need to match up to the kind of model we want to store in this collection.
 
     var TextCollection = Backbone.Collection.extend({
         model : TextModel
     });
 
-After this. we need to make our view for the **collection** and write our event handlers for the collection. The view for the collection will display all of our individual views as well have a button that will add a new &ldquo;blank&rdquo; text field into our page (with the default text &ldquo;Enter something here&rdquo;).
+After this, we need to make our view for the **collection** and write our event handlers for the collection. This is going to be the bulk of our moving parts for this program. The view for the collection will display all of our individual views as well have a button that will add a new &ldquo;blank&rdquo; text field into our page (with the default text &ldquo;Enter something here&rdquo;). 
 
     var TextCollectionView = Backbone.View.extend({
         render : function () {
@@ -367,7 +375,11 @@ After this. we need to make our view for the **collection** and write our event 
         }
     });
 
-Finally, we go ahead and run the code we need to initialize everything:
+There&rsquo;s a few pieces here that we should explain in a bit more detail. First, we&rsquo;re using the more convenient function `listenTo` this time, which in this case means that `this.collection` is now listening on the `add` event and, when it fires, will run `this.addOne` **in the context of the view, not the collection**. Basically, this just lets us avoid including the extra `this` parameter like in our individual model. Calling `addOne` takes the newly added model, creates a view for it, renders it, then adds it to the list of views. We use `events` to listen for when the button is clicked and then we run `addCollection`. In turn, `addCollection` will call the `create` method of the collection. The importance of `create` is that it will simultaneously make a new model and add it to the collection, triggering the `add` event that we&rsquo;re already listening for. 
+
+Note that we don&rsquo;t have to say **anything** in the view for the collection about how the view of the individual model works. We just call that individual view&rsquo;s render function and allow it to take care of everything. 
+
+Finally, we go ahead and run the code we need to initialize the whole application:
 
     var textCollection = new TextCollection();
     
@@ -381,14 +393,20 @@ Finally, we go ahead and run the code we need to initialize everything:
 
 ### Delete Button
 
-In this exercise, we&rsquo;re going to add a &ldquo;delete&rdquo; button that will erase the top element of the list of elements. To do that, you&rsquo;re going to need to 
+In this exercise, we&rsquo;re going to add a &ldquo;delete&rdquo; button that will erase the bottom element of the list of elements. To do that, you&rsquo;re going to need to 
 
 -   add a delete button to the view of the **collection**
--   add a event handler that listens for the &ldquo;remove&rdquo; event for the collection and refreshes the list, removing
+-   add a event handler that listens for the &ldquo;remove&rdquo; event for the collection and refreshes the list, removing the corresponding view from the DOM.
+    -   there&rsquo;s more than one way you could do this, but a simple way might be to use CSS psuedo-selectors to select only the last div in the collection
 
 ### Edited Count
 
-In this exercise, you&rsquo;re going to add a new piece of data to the **base** model
+In this exercise, you&rsquo;re going to add a new piece of data to the **base** model: the number of times that it&rsquo;s been edited. Every time the &ldquo;Edit&rdquo; button is clicked, it should increment this number. You&rsquo;ll need to also modify the view for the base model. 
+Question: will you need to modify the view for the collection?
+
+1.  Extra Credit
+
+    To be a little more challenging, make sure that the number-of-times-incremented only increases if the text has actually changed.
 
 # Server Side Project: Counter With Server
 
