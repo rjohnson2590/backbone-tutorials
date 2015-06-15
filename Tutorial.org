@@ -333,7 +333,7 @@ We're going to start our application very similar to how our previous project st
   </html>
 #+END_SRC
  
-Next, we'll start with our basic model of a piece of text. It'll have a "replace" method that will replace the text inside it, but no others for now. It's individual view is going to be an input with the default text of the input set to the value of the model and a "edit" button that will set the model to be the current value of the text field. This part is basically the same as our previous project.
+Next, we'll start with our basic model of a piece of text. It'll have a "replace" method that will replace the text inside it. It's individual view is going to be an input with the default text of the input set to the value of the model and a "clear" button that will set the text of the model to the empty string ~" "~ . This part is basically the same as our previous project, except that we're going to use a different *kind* of event, ~keypress~, for setting the value of the text of the model. In particular, if the key pressed in the input field is the "enter" key, then we call the ~replace~ operator of the view, which will in turn call the ~replace~ method of the model.
 
 #+BEGIN_SRC js :exports none :tangle textlist.js
   $(document).ready( function () {
@@ -351,7 +351,7 @@ Next, we'll start with our basic model of a piece of text. It'll have a "replace
   var TextView = Backbone.View.extend({
       render: function () {
           var textVal = this.model.get("value");
-          var btn = '<button>Edit</button>';
+          var btn = '<button>Clear</button>';
           var input = '<input type="text" value="' + textVal + '" />';
           this.$el.html("<div>" + input + btn + "</div>");
       },
@@ -359,11 +359,20 @@ Next, we'll start with our basic model of a piece of text. It'll have a "replace
           this.model.on("change", this.render, this);
       },
       events : {
-          "click button" : "replace"
+          "click button" : "clear",
+          "keypress input" : "updateOnEnter"
       },
       replace : function () {
           var str = this.$el.find("input").val();
           this.model.replace(str);
+      },
+      clear: function () {
+          this.model.replace("");
+      },
+      updateOnEnter: function (e){
+          if(e.keyCode == 13) {
+              this.replace();
+          }
       }
   });
 #+END_SRC
@@ -428,7 +437,7 @@ Finally, we go ahead and run the code we need to initialize the whole applicatio
    + add a event handler that listens for the "remove" event for the collection and refreshes the list, removing the corresponding view from the DOM.
      + there's more than one way you could do this, but a simple way might be to use CSS psuedo-selectors to select only the last div in the collection
 *** Edited Count
-    In this exercise, you're going to add a new piece of data to the *base* model: the number of times that it's been edited. Every time the "Edit" button is clicked, it should increment this number. You'll need to also modify the view for the base model. 
+    In this exercise, you're going to add a new piece of data to the *base* model: the number of times that it's been edited. Every time the field is edited, it should increment this number. In this case, "edited" means *either* cleared or you've pressed enter while in the input field. You'll need to also modify the view for the base model. 
     Question: will you need to modify the view for the collection?
 **** Extra Credit
    To be a little more challenging, make sure that the number-of-times-incremented only increases if the text has actually changed.

@@ -12,7 +12,7 @@ TextModel.prototype.replace = function (str) {
 var TextView = Backbone.View.extend({
     render: function () {
         var textVal = this.model.get("value");
-        var btn = '<button>Edit</button>';
+        var btn = '<button>Clear</button>';
         var input = '<input type="text" value="' + textVal + '" />';
         this.$el.html("<div>" + input + btn + "</div>");
     },
@@ -20,11 +20,20 @@ var TextView = Backbone.View.extend({
         this.model.on("change", this.render, this);
     },
     events : {
-        "click button" : "replace"
+        "click button" : "clear",
+        "keypress input" : "updateOnEnter"
     },
     replace : function () {
         var str = this.$el.find("input").val();
         this.model.replace(str);
+    },
+    clear: function () {
+        this.model.replace("");
+    },
+    updateOnEnter: function (e){
+        if(e.keyCode == 13) {
+            this.replace();
+        }
     }
 });
 
