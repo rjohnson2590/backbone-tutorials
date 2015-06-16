@@ -5,8 +5,7 @@
   In these notes we'll be covering several major topics: 
 
   + Organizing client-side code using Backbone
-  + Communicating with a Node server using Backbone
-  + Syncing our data to a persistent store, in the form of a MongoDB database
+  + Communicating with a simple Node/Express server using Backbone
 
 For the first part, we're only presuming a small amount of base jQuery knowledge. In our second part, we'll be assuming some familiarity with Node but will include at least some review of the functions that we're using as we use them. For our final part, we'll be including a modest introduction to the functionality of MongoDB that we require for building our application. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we're developing. As this tutorial is written using [[http://orgmode.org/][org-mode]]'s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command ~C-c C-v C-t~. PDF and Markdown copies of this tutorial will also be included in the repository. 
 * The Overall Point of Backbone
@@ -442,17 +441,149 @@ Finally, we go ahead and run the code we need to initialize the whole applicatio
 **** Extra Credit
    To be a little more challenging, make sure that the number-of-times-incremented only increases if the text has actually changed.
 * Server Side Project: Counter With Server
+** Outline
   In this section, we're going to show how to connect our first counter example with a simple Node server. By the end of this section we'll have shown
-  + set the 
-* Server Side Project: Collections and Databases
+  + how to use Backbone to save models to a server
+    + how to set the url route *used* by Backbone to communicate with the server
+    + how to use synchronization methods for models such as ~save~ and ~destroy~
+** Lesson and Code 
+   First, let's put together our client side application and then go ahead and show how to write a simple server to go along with it. Our HTML isn't going to change, other than linking to a different file:
+file: counterServe.html
+#+BEGIN_SRC html :exports code :tangle counterServe.html
+  <!doctype html>
+  <html>
+    <head>
+      <title>A Counter Example</title>
+      <script type="text/javascript" src="js/jquery-2.1.4.js"></script>
+      <script type="text/javascript" src="js/underscore.js"></script>
+      <script type="text/javascript" src="js/backbone.js"></script>
+      <script type="text/javascript" src="counterServe.js"></script>
+    </head>
+    <body>
+      <div id="counterdiv"></div>
+    </body>
+  </html>
+#+END_SRC
+and we're going to *mostly* use the same Backbone code as our cleaned-up counter example.
+file: counterServe.js
+#+BEGIN_SRC js :exports code :tangle counterServe.js
+  $(document).ready( function () {
+
+      var Counter = Backbone.Model.extend({
+          defaults : {"value" : 0},
+          urlRoot : "/counter"
+      });
+      
+      var counterModel1 = new Counter({id : 1});
+
+      Counter.prototype.inc = function () {
+          var val = this.get("value");
+          this.set("value", val+1);
+          this.save();
+      }      
+      
+      counterModel1.fetch();      
+#+END_SRC
+
+the first real change is that we need to set the URL structure that's we're going to use for communicating with the server. In this case, we're going to use ~/counter~ as the basic route, so we set ~urlRoot~ to be ~/counter~. When Backbone communicates with the server, it will send a message to ~route/to/server/counter/id~ where ~id~ is the value of the id of the counter. You might note that we hadn't *used* an ID before now, but by default Backbone needs an ~id~ to communicate with the server so we include it as a parameter when we create our model.
+
+The view is entirely unchanged from our previous code, since we've localized all the interaction with the server into the model.
+#+BEGIN_SRC js :exports code :tangle counterServe.js
+      var CounterView = Backbone.View.extend({
+          render: function () {
+              var val = this.model.get("value");
+              var btn = '<button>Increment</button>';
+              this.$el.html('<p>'+val+'</p>' + btn);
+          },
+          initialize: function () {
+              this.model.on("change", this.render, this);
+          },
+          events : {
+              'click button' : 'increment'
+          },
+          increment : function () {
+              this.model.inc();
+          }
+      });
+      
+      var counterView1 = new CounterView({model : counterModel1});
+      
+      counterView1.render();
+      
+      $("#counterdiv").append(counterView1.$el);
+      
+  });
+#+END_SRC
+and we'll also set up a simple Express server to serve up the the HTML statically and then have a couple of simple routes for handling the get and put from the client side. We've already decided what routes we should be listening on: ~/counter/1~ is going to be the URL uses to talk to the server. 
+
+This server is fairly simple. We 
+  + set up the server application by calling ~express()~
+  + initialize a variable that will store the counter, setting it to 0
+  + set up the needed middleware for
+    + automatically parsing the request into JSON
+    + serving up the local directory statically
+  + set up the routes for Backbone's use
+    + a *get* request to ~/counter/1~ will send back an object that has the value of the counter
+    + a *put* request to ~/counter/1~ will extract the value of the counter from the request and store it in the local variable
+
+#+BEGIN_SRC js :exports code :tangle counterServer.js
+  var express = require('express');
+  var bodyParser = require('body-parser');
+
+  var app = express();
+
+  var counter1 = 0;
+
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(express.static(__dirname));
+
+  app.get('/counter/1', function (req, res) {
+      console.log("counter has been requested");
+      res.send(JSON.stringify({value : counter1}));
+  });
+
+  app.put('/counter/1', function (req, res) {
+      console.log(req.body);
+      counter1 = req.body.value;
+      res.end();
+  });
+
+  app.listen(3000, function () {
+      console.log("server started");
+  });
+#+END_SRC
+
+In order to actually run this code, we need to make sure that the appropriate libraries are installed, so run the following shell commands to get your local directory set up with the Node libraries needed. 
+#+BEGIN_SRC sh :exports code :results none
+  npm install express &&
+  npm install body-parser
+#+END_SRC
+Then, go ahead and start the server with 
+#+BEGIN_SRC sh :exports code
+  node counterServer.js
+#+END_SRC
+and navigate your browser to ~localhost:3000/counterServe.html~ see the application. To test and make sure the synchronization with the server is working, try refreshing the page. You should see the value of the counter be restored to what it had been before the refresh. 
+** Exercises
+*** Sync Events
+    Every time ~save~ or ~fetch~ is called, a ~sync~ event is triggered for the model. Given this fact, go ahead and test this event out by adding 
+   + a new ~<p>~ element to the view 
+   + an event handler to the view that will update the text of this element every time a sync event is called
+**** Extra Credit
+     You'll note that as described, this field doesn't actually *persist* across refreshes of the page. In order to make it 
+*** Decrement Button
+    A simple exercise to try is to add a decrement button to the view and a decrement operation to the model that synchronizes up with the server correctly. Test your code by refreshing the page.
+*** Concatenating Text Fields
+    This exercise is a repeat of the Concatenating Text Fields of the first section, but this time you need to 
+   + choose a url path for the data
+   + add the appropriate ~save~ and ~fetch~ calls to the model to synchronize with the server
+   + write a small server based on our example that will serve up our page and listen for Backbone's requests
+* Server Side Project: Collections 
   In our final section, we'll be covering
   + Backbone's Router class for providing nice URLs on the client side
   + How to use IDs in URLs to index into collections
-  + What a full, but small, client-server application looks like in Backbone
 ** Exercises
-*** Grocery List App
-    Our final set of exercises contains just a single task: create a small application from which users can log in, enter a new grocery list, access past grocery lists and sort items in grocery lists by some criterion.
-
+*** 
 * Footnotes
 
 [fn:1] This section of the tutorial is partially inspired by the backbone "todo list" tutorial http://backbonejs.org/docs/todos.html
