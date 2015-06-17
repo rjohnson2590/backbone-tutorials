@@ -526,6 +526,7 @@ This server is fairly simple. We
     + a *get* request to ~/counter/1~ will send back an object that has the value of the counter
     + a *put* request to ~/counter/1~ will extract the value of the counter from the request and store it in the local variable
 
+file: counterServer.js
 #+BEGIN_SRC js :exports code :tangle counterServer.js
   var express = require('express');
   var bodyParser = require('body-parser');

@@ -1,4 +1,5 @@
-# Introduction to This Tutorial
+Introduction to This Tutorial
+=============================
 
 In these notes we&rsquo;ll be covering several major topics: 
 
@@ -7,7 +8,8 @@ In these notes we&rsquo;ll be covering several major topics:
 
 For the first part, we&rsquo;re only presuming a small amount of base jQuery knowledge. In our second part, we&rsquo;ll be assuming very mild familiarity with Node and Express, but we&rsquo;ll be at least be explaining all the functionality from Express that we need for the small servers that we&rsquo;re writing. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we&rsquo;re developing, but there are a few that will involve starting from scratch based off of the examples already seen. As this tutorial is written using [org-mode](http://orgmode.org/)&rsquo;s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command `C-c C-v C-t`. A Markdown copy of this tutorial will also be included in the repository. 
 
-# The Overall Point of Backbone
+The Overall Point of Backbone
+=============================
 
 If you&rsquo;re reading this, then it&rsquo;s likely that your ultimate goal is to understand how to make interactive web sites. One of the difficulties in writing larger and more complex sites is keeping all the code principled and well-organized. For example, consider the way that in templates you can have something like
 
@@ -61,7 +63,8 @@ The structure of this tutorial is that we&rsquo;ll start first by leaving off th
 
 and then after getting more comfortable with that picture, we&rsquo;ll add in a server and a database. 
 
-# Installation
+Installation
+============
 
 In order to get started, you need to download the following files and place them in the `../js` directory of this repository
 
@@ -77,9 +80,11 @@ or, at least on Linux but possibly OS X if you have &ldquo;wget&rdquo; installed
     wget http://underscorejs.org/underscore.js && 
     wget http://code.jquery.com/jquery-2.1.4.js
 
-# Your First Backbone Project: A Simple Counter
+Your First Backbone Project: A Simple Counter
+=============================================
 
-## Outline
+Outline
+-------
 
 In this brief project, we&rsquo;re going to create a client side application that will
 
@@ -100,7 +105,8 @@ The basic outline is that we&rsquo;ll
 2.  create a view connected to this model
 3.  install our event handlers
 
-## Lesson and Example Code
+Lesson and Example Code
+-----------------------
 
 First things first, we need to have our base HTML for the application. In this case, we&rsquo;re going to have a rather simple HTML page that initially contains a `<div>` where we&rsquo;re going to place our counter and a button that we&rsquo;ll use to increment the counter.
 
@@ -179,37 +185,39 @@ Finally, we run the code that inserts the `$el` element of the view into the DOM
 
 Now, all that&rsquo;s left is to load our page and take a look!
 
-## Exercises
+Exercises
+---------
 
-### Subtraction Button
+1.  Subtraction Button
 
-For this exercise, take the counter example we walked through above and add another button that will *decrement* the counter instead. You&rsquo;ll need to 
+    For this exercise, take the counter example we walked through above and add another button that will *decrement* the counter instead. You&rsquo;ll need to 
+    
+    1.  modify the render function
+    2.  modify the existing event handler for the increment function to be more specific
+    3.  make a new decrement button event handler
+    
+    1.  Bonus Challenge
+    
+        Ensure that the counter **is not changed** if its value is equal to zero. In other words, not only should the counter&rsquo;s value not dip below 0 but the `change` event in the model shouldn&rsquo;t be triggered if the value is 0. Test and ensure it&rsquo;s not firing by placing a `console.log` statement in the `change` event handler
 
-1.  modify the render function
-2.  modify the existing event handler for the increment function to be more specific
-3.  make a new decrement button event handler
+2.  Clear Button
 
-1.  Bonus Challenge
+    In addition to or perhaps in lieu of the previous exercise, add a button that resets the counter back to 0. Like the previous exercise, you&rsquo;ll need to
+    
+    1.  modify the render function
+    2.  modify the existing event handler for the increment button
+    3.  make a new button to reset the counter
 
-    Ensure that the counter **is not changed** if its value is equal to zero. In other words, not only should the counter&rsquo;s value not dip below 0 but the `change` event in the model shouldn&rsquo;t be triggered if the value is 0. Test and ensure it&rsquo;s not firing by placing a `console.log` statement in the `change` event handler
+3.  Concatenating Text Field
 
-### Clear Button
+    In this exercise, you should start **from scratch** and write a new application that will have
+    
+    -   an input text field
+    -   a button labled concatenate
+    -   a place for the entered text to be displayed
 
-In addition to or perhaps in lieu of the previous exercise, add a button that resets the counter back to 0. Like the previous exercise, you&rsquo;ll need to
-
-1.  modify the render function
-2.  modify the existing event handler for the increment button
-3.  make a new button to reset the counter
-
-### Concatenating Text Field
-
-In this exercise, you should start **from scratch** and write a new application that will have
-
--   an input text field
--   a button labled concatenate
--   a place for the entered text to be displayed
-
-## Cleaning Up Our Code
+Cleaning Up Our Code
+--------------------
 
 There&rsquo;s a little bit of ugliness in our code that was there for the sake of pedagogical order: we&rsquo;re **manually** connecting the event handler for the model back to the view and we&rsquo;re also including too much logic of the **model** in the **view** event handlers. This wasn&rsquo;t so bad for our tiny example, but what if we want to have more than one instance of the model? It&rsquo;s going to be annoying to connect everything together correctly and rewrite the model handling code in each view. We&rsquo;re going to present a bit of a cleaned up version of the code that will be better refactored and show that it&rsquo;s easier to insert multiple model/view pairs into the application. We&rsquo;re going to go a little bit faster than the previous time.
 
@@ -257,7 +265,8 @@ Now! We can go ahead and make our models and views and insert them into the DOM.
     $("#counterdiv").append(counterView1.$el);
     $("#counterdiv").append(counterView2.$el);
 
-## Questions To Think About
+Questions To Think About
+------------------------
 
 1.  Why do we include the increment button in the view and not the base HTML?
 2.  Think about sites you use frequently and sketch out how they might be divided into
@@ -265,9 +274,11 @@ Now! We can go ahead and make our models and views and insert them into the DOM.
     -   views
     -   events
 
-# Collections Project: Text Lists
+Collections Project: Text Lists
+===============================
 
-## Outline
+Outline
+-------
 
 In this project, we&rsquo;re going to again create a *client side only* application that
 
@@ -281,7 +292,8 @@ What we&rsquo;re going to cover in this section is:
 -   How to make the collection&rsquo;s view delegate to individual views
 -   How to use the collection specific events to keep the view in-sync
 
-## Lesson and Code
+Lesson and Code
+---------------
 
 When you&rsquo;re dealing with sites like twitter, or instagram, or anythig of that ilk there tend to be **collections** of things. You&rsquo;re reading a *list* of tweets, looking at a *list* of search results, examining a *list* of photos that match a tag, checking a *list* of followers etc. 
 
@@ -397,28 +409,31 @@ Finally, we go ahead and run the code we need to initialize the whole applicatio
     
     $("#listdiv").append(textCollectionView.$el);
 
-## Exercises
+Exercises
+---------
 
-### Delete Button
+1.  Delete Button
 
-In this exercise, we&rsquo;re going to add a &ldquo;delete&rdquo; button that will erase the bottom element of the list of elements. To do that, you&rsquo;re going to need to 
+    In this exercise, we&rsquo;re going to add a &ldquo;delete&rdquo; button that will erase the bottom element of the list of elements. To do that, you&rsquo;re going to need to 
+    
+    -   add a delete button to the view of the **collection**
+    -   add a event handler that listens for the &ldquo;remove&rdquo; event for the collection and refreshes the list, removing the corresponding view from the DOM.
+        -   there&rsquo;s more than one way you could do this, but a simple way might be to use CSS psuedo-selectors to select only the last div in the collection
 
--   add a delete button to the view of the **collection**
--   add a event handler that listens for the &ldquo;remove&rdquo; event for the collection and refreshes the list, removing the corresponding view from the DOM.
-    -   there&rsquo;s more than one way you could do this, but a simple way might be to use CSS psuedo-selectors to select only the last div in the collection
+2.  Edited Count
 
-### Edited Count
+    In this exercise, you&rsquo;re going to add a new piece of data to the **base** model: the number of times that it&rsquo;s been edited. Every time the field is edited, it should increment this number. In this case, &ldquo;edited&rdquo; means **either** cleared or you&rsquo;ve pressed enter while in the input field. You&rsquo;ll need to also modify the view for the base model. 
+    Question: will you need to modify the view for the collection?
+    
+    1.  Extra Credit
+    
+        To be a little more challenging, make sure that the number-of-times-incremented only increases if the text has actually changed.
 
-In this exercise, you&rsquo;re going to add a new piece of data to the **base** model: the number of times that it&rsquo;s been edited. Every time the field is edited, it should increment this number. In this case, &ldquo;edited&rdquo; means **either** cleared or you&rsquo;ve pressed enter while in the input field. You&rsquo;ll need to also modify the view for the base model. 
-Question: will you need to modify the view for the collection?
+Server Side Project: Counter With Server
+========================================
 
-1.  Extra Credit
-
-    To be a little more challenging, make sure that the number-of-times-incremented only increases if the text has actually changed.
-
-# Server Side Project: Counter With Server
-
-## Outline
+Outline
+-------
 
 In this section, we&rsquo;re going to show how to connect our first counter example with a simple Node server. By the end of this section we&rsquo;ll have shown
 
@@ -426,7 +441,8 @@ In this section, we&rsquo;re going to show how to connect our first counter exam
     -   how to set the url route **used** by Backbone to communicate with the server
     -   how to use synchronization methods for models such as `save` and `destroy`
 
-## Lesson and Code
+Lesson and Code
+---------------
 
    First, let&rsquo;s put together our client side application and then go ahead and show how to write a simple server to go along with it. Our HTML isn&rsquo;t going to change, other than linking to a different file:
 file: counterServe.html
@@ -507,6 +523,8 @@ This server is fairly simple. We
     -   a **get** request to `/counter/1` will send back an object that has the value of the counter
     -   a **put** request to `/counter/1` will extract the value of the counter from the request and store it in the local variable
 
+file: counterServer.js
+
     var express = require('express');
     var bodyParser = require('body-parser');
     
@@ -544,45 +562,49 @@ Then, go ahead and start the server with
 
 and navigate your browser to `localhost:3000/counterServe.html` see the application. To test and make sure the synchronization with the server is working, try refreshing the page. You should see the value of the counter be restored to what it had been before the refresh. 
 
-## Exercises
+Exercises
+---------
 
-### Sync Events
+1.  Sync Events
 
-Every time `save` or `fetch` is called, a `sync` event is triggered for the model. Given this fact, go ahead and test this event out by adding 
-
--   a new `<p>` element to the view
--   an event handler to the view that will update the text of this element every time a sync event is called
-
-1.  Extra Credit
-
-    You&rsquo;ll note that as described, this field doesn&rsquo;t actually **persist** across refreshes of the page. In order to make it actually persist for the life of the server, we&rsquo;ll need to add a **new** view and model. The basic procedure is:
+    Every time `save` or `fetch` is called, a `sync` event is triggered for the model. Given this fact, go ahead and test this event out by adding 
     
-    -   define a new model for the refresh data
-        -   define the URL root for the refresh model
-    -   define a view for the refresh data
-    -   have the refresh-model listen for the `sync` event on the counter model and update itself
+    -   a new `<p>` element to the view
+    -   an event handler to the view that will update the text of this element every time a sync event is called
     
-    As with the other exercises in this section, test things out by refreshing the page and making sure that the data doesn&rsquo;t change.
+    1.  Extra Credit
+    
+        You&rsquo;ll note that as described, this field doesn&rsquo;t actually **persist** across refreshes of the page. In order to make it actually persist for the life of the server, we&rsquo;ll need to add a **new** view and model. The basic procedure is:
+        
+        -   define a new model for the refresh data
+            -   define the URL root for the refresh model
+        -   define a view for the refresh data
+        -   have the refresh-model listen for the `sync` event on the counter model and update itself
+        
+        As with the other exercises in this section, test things out by refreshing the page and making sure that the data doesn&rsquo;t change.
 
-### Decrement Button
+2.  Decrement Button
 
-A simple exercise to try is to add a decrement button to the view and a decrement operation to the model that synchronizes up with the server correctly. Test your code by refreshing the page.
+    A simple exercise to try is to add a decrement button to the view and a decrement operation to the model that synchronizes up with the server correctly. Test your code by refreshing the page.
 
-### Concatenating Text Fields
+3.  Concatenating Text Fields
 
-This exercise is a repeat of the Concatenating Text Fields of the first section, but this time you need to 
+    This exercise is a repeat of the Concatenating Text Fields of the first section, but this time you need to 
+    
+    -   choose a url path for the data
+    -   add the appropriate `save` and `fetch` calls to the model to synchronize with the server
+    -   write a small server based on our example that will serve up our page and listen for Backbone&rsquo;s requests
 
--   choose a url path for the data
--   add the appropriate `save` and `fetch` calls to the model to synchronize with the server
--   write a small server based on our example that will serve up our page and listen for Backbone&rsquo;s requests
+Server Side Project: Collections
+================================
 
-# Server Side Project: Collections
-
-## Outline
+Outline
+-------
 
 Next, as a short section we&rsquo;ll be covering how to synchronize Backbone collections with the server. To this end, we&rsquo;ll convert the previous text-fields examples to communicate with a small Express server much like we did in the previous section. 
 
-## Lesson and Code
+Lesson and Code
+---------------
 
 As usual, the first piece is our HTML which isn&rsquo;t going to change except for the filename:
 
@@ -725,17 +747,20 @@ file: textlistServer.js
     
     app.listen(3000);
 
-## Exercises
+Exercises
+---------
 
-### Server Side IDs
+1.  Server Side IDs
 
-### Deletion
+2.  Deletion
 
-# Project Ideas
+Project Ideas
+=============
 
 In our final section, we&rsquo;ll be covering a few ideas for small, self-contained Backbone projects.
 
-## Grocery List App
+Grocery List App
+----------------
 
 A reasonable plan of action is to
 
@@ -751,15 +776,16 @@ A reasonable plan of action is to
     -   the view should include a button that will add a new model to the collection
 -   write a simple server that will keep all this data alive across refreshes of the page
 
-### Extra Credit
+1.  Extra Credit
 
-Include one more piece of data: a budget. You&rsquo;ll need to make another model and view for the budget. In this case, though, you&rsquo;ll actually want the view for the budget to include **another** field that&rsquo;s the amount you have **left** after subtracting all the current groceries.
-You can either
+    Include one more piece of data: a budget. You&rsquo;ll need to make another model and view for the budget. In this case, though, you&rsquo;ll actually want the view for the budget to include **another** field that&rsquo;s the amount you have **left** after subtracting all the current groceries.
+    You can either
+    
+    -   have the remaining amount field recalculate when you click a button that&rsquo;s also in the budget&rsquo;s view
+    -   have the remaining amount field recalculate whenever you&rsquo;ve edited the grocery list
 
--   have the remaining amount field recalculate when you click a button that&rsquo;s also in the budget&rsquo;s view
--   have the remaining amount field recalculate whenever you&rsquo;ve edited the grocery list
-
-## Sudoku Solver
+Sudoku Solver
+-------------
 
 If you&rsquo;ve completed the sudoku solver project from [Portland Code School&rsquo;s](http://portlandcodeschool.github.io/jsi/2015/06/16/sudoku/) Javascript course, then you can absolutely use Backbone to provide a front-end to the sudoku solver.
 
@@ -772,11 +798,12 @@ The basic outline of what you should do is:
     -   with the intermmediate step of defining models and views for rows if that&rsquo;s how you&rsquo;re planning to do it
     -   add a button to the view that calls your solver on the server and then syncs the front end with the server
 
-### Extra Credit
+1.  Extra Credit
 
-If you want to make your sudoku implementation more thorough, you can make it more interactive in terms of allowing users to create a sudoku puzzle from scratch by editing the fields. In this case, you might want to start with a completely **blank** puzzle and make the individual cells be editable. 
+    If you want to make your sudoku implementation more thorough, you can make it more interactive in terms of allowing users to create a sudoku puzzle from scratch by editing the fields. In this case, you might want to start with a completely **blank** puzzle and make the individual cells be editable. 
 
-## Anything You Want
+Anything You Want
+-----------------
 
 Go ahead. You can actually try anything you&rsquo;d like.
 
