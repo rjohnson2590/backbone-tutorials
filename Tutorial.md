@@ -584,6 +584,10 @@ Next, as a short section we&rsquo;ll be covering how to synchronize Backbone col
 
 ## Lesson and Code
 
+As usual, the first piece is our HTML which isn&rsquo;t going to change except for the filename:
+
+file: textlistServe.html
+
     <!doctype html>
     <html>
       <head>
@@ -598,10 +602,10 @@ Next, as a short section we&rsquo;ll be covering how to synchronize Backbone col
       </body>
     </html>
 
-    $(document).ready( function () {
-    
-    var idCount = 0;
-    
+Now we come to the client-side application. In the first place, we have our basic model and view. This model and view is going to be mostly similar to what we&rsquo;ve seen before. The main change that we make is that we call `.save` in the `replace` function of the model and call `fetch` in our initialization.
+
+file: textlistServe.js
+
     var TextModel = Backbone.Model.extend({
         defaults : {"value" : ""},
         initialize : function () {
@@ -640,7 +644,9 @@ Next, as a short section we&rsquo;ll be covering how to synchronize Backbone col
             }
         }
     });
-    
+
+The more significant changes come in our collection. First, note that we set the url **in the collection** rather than in the individual models, now. In fact, our `urlRoot` property from the last section is only to be used if we&rsquo;re planning to not use our models as part of a collection. 
+
     var TextCollection = Backbone.Collection.extend({
         model : TextModel,
         url : "/texts",
@@ -648,6 +654,10 @@ Next, as a short section we&rsquo;ll be covering how to synchronize Backbone col
             this.fetch();
         }
     });
+
+For the view, we make a rather important change in the `addCollection` call: we need to now set the **ID** of each model. To simplify things, we&rsquo;re going to just assign all of our IDs on the client side, using a simple counter to keep each of the IDs unique by incrementing them. <sup><a id="fnr.2" name="fnr.2" class="footref" href="#fn.2">2</a></sup>
+
+    var idCount = 0;
     
     var TextCollectionView = Backbone.View.extend({
         render : function () {
@@ -683,15 +693,16 @@ Next, as a short section we&rsquo;ll be covering how to synchronize Backbone col
     
     });
 
-    var express = require('express');
-    var bodyParser = require('body-parser');
-    
-    var app = express();
-    
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended : false}));
-    app.use(express.static(__dirname));
-    
+Finally, we have the server for our application. We&rsquo;re skipping over the preample that&rsquo;s identical, and instead we&rsquo;ll concentrate on the routes. To note, we&rsquo;re storing all of our examples in 
+
+Here, we&rsquo;re going to have three different main routes. 
+
+1.  a `get` route to `/texts/:id`, this is called when we `fetch` from the **TextModel** and we need to return the JSON object that packs up the value property from the `texts` array on the server
+2.  a `put` route to `/texts/:id`, which is called when we modify a TextModel
+3.  a `get` route to `/texts` which is used to initialize the data for the TextCollection, where we pack up an array of objects to feed into the collection and send it
+
+file: textlistServer.js
+
     var texts = [];
     
     app.get('/texts/:id', function (req, res) {
@@ -712,16 +723,13 @@ Next, as a short section we&rsquo;ll be covering how to synchronize Backbone col
         res.send(textsAndIDs);
     });
     
-    app.post('/texts', function (req, res) {
-        texts.push(req.body.value);
-        res.end();
-    });
-    
     app.listen(3000);
 
 ## Exercises
 
-### 
+### Server Side IDs
+
+### Deletion
 
 # Project Ideas
 
@@ -777,6 +785,8 @@ Go ahead. You can actually try anything you&rsquo;d like.
 <div id="text-footnotes">
 
 <div class="footdef"><sup><a id="fn.1" name="fn.1" class="footnum" href="#fnr.1">1</a></sup> This section of the tutorial is partially inspired by the backbone &ldquo;todo list&rdquo; tutorial <http://backbonejs.org/docs/todos.html></div>
+
+<div class="footdef"><sup><a id="fn.2" name="fn.2" class="footnum" href="#fnr.2">2</a></sup> Now, there&rsquo;s an interesting caveat here: in my initial attempt at writing this code, I set the ID in the initialize method of the base model, not in the creation of a model. This seemed entirely reasonable and I couldn&rsquo;t find anything in the documentation that made it seem wrong, but in *reality* as far as I can tell if you try to set the ID in initialization, then every call to the model&rsquo;s `save` method will treat the model as being &ldquo;new&rdquo; as per the Backbone [documentation](http://backbonejs.org/#Model-isNew).</div>
 
 
 </div>

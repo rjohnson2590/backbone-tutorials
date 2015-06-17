@@ -587,6 +587,10 @@ As with the other exercises in this section, test things out by refreshing the p
 ** Outline 
   Next, as a short section we'll be covering how to synchronize Backbone collections with the server. To this end, we'll convert the previous text-fields examples to communicate with a small Express server much like we did in the previous section. 
 ** Lesson and Code
+
+   As usual, the first piece is our HTML which isn't going to change except for the filename:
+
+file: textlistServe.html
 #+BEGIN_SRC html :exports code :tangle textlistServe.html
   <!doctype html>
   <html>
@@ -603,11 +607,15 @@ As with the other exercises in this section, test things out by refreshing the p
   </html>
 #+END_SRC
 
-#+BEGIN_SRC js :exports code :tangle textlistServe.js
+
+#+BEGIN_SRC js :exports none :tangle textlistServe.js
   $(document).ready( function () {
+#+END_SRC
 
-  var idCount = 0;
+Now we come to the client-side application. In the first place, we have our basic model and view. This model and view is going to be mostly similar to what we've seen before. The main change that we make is that we call ~.save~ in the ~replace~ function of the model and call ~fetch~ in our initialization.
 
+file: textlistServe.js
+#+BEGIN_SRC js :exports code :tangle textlistServe.js
   var TextModel = Backbone.Model.extend({
       defaults : {"value" : ""},
       initialize : function () {
@@ -646,7 +654,11 @@ As with the other exercises in this section, test things out by refreshing the p
           }
       }
   });
+#+END_SRC
 
+The more significant changes come in our collection. First, note that we set the url *in the collection* rather than in the individual models, now. In fact, our ~urlRoot~ property from the last section is only to be used if we're planning to not use our models as part of a collection. 
+
+#+BEGIN_SRC js :exports code :tangle textlistServe.js 
   var TextCollection = Backbone.Collection.extend({
       model : TextModel,
       url : "/texts",
@@ -654,6 +666,12 @@ As with the other exercises in this section, test things out by refreshing the p
           this.fetch();
       }
   });
+#+END_SRC
+
+For the view, we make a rather important change in the ~addCollection~ call: we need to now set the *ID* of each model. To simplify things, we're going to just assign all of our IDs on the client side, using a simple counter to keep each of the IDs unique by incrementing them. [fn:2]
+
+#+BEGIN_SRC js :exports code :tangle textlistServe.js
+  var idCount = 0;
 
   var TextCollectionView = Backbone.View.extend({
       render : function () {
@@ -690,7 +708,7 @@ As with the other exercises in this section, test things out by refreshing the p
   });
 #+END_SRC
 
-#+BEGIN_SRC js :exports code :tangle textlistServer.js
+#+BEGIN_SRC js :exports none :tangle textlistServer.js
   var express = require('express');
   var bodyParser = require('body-parser');
 
@@ -700,6 +718,18 @@ As with the other exercises in this section, test things out by refreshing the p
   app.use(bodyParser.urlencoded({ extended : false}));
   app.use(express.static(__dirname));
 
+#+END_SRC
+
+Finally, we have the server for our application. We're skipping over the preample that's identical, and instead we'll concentrate on the routes. To note, we're storing all of our examples in 
+
+Here, we're going to have three different main routes. 
+
+   1. a ~get~ route to ~/texts/:id~, this is called when we ~fetch~ from the *TextModel* and we need to return the JSON object that packs up the value property from the ~texts~ array on the server
+   2. a ~put~ route to ~/texts/:id~, which is called when we modify a TextModel 
+   3. a ~get~ route to ~/texts~ which is used to initialize the data for the TextCollection, where we pack up an array of objects to feed into the collection and send it
+
+file: textlistServer.js
+#+BEGIN_SRC js :exports code :tangle textlistServer.js
   var texts = [];
 
   app.get('/texts/:id', function (req, res) {
@@ -720,15 +750,11 @@ As with the other exercises in this section, test things out by refreshing the p
       res.send(textsAndIDs);
   });
 
-  app.post('/texts', function (req, res) {
-      texts.push(req.body.value);
-      res.end();
-  });
-
   app.listen(3000);
 #+END_SRC
 ** Exercises
-*** 
+*** Server Side IDs
+*** Deletion
 * Project Ideas
   In our final section, we'll be covering a few ideas for small, self-contained Backbone projects.
 ** Grocery List App
@@ -766,6 +792,8 @@ As with the other exercises in this section, test things out by refreshing the p
 * Footnotes
 
 [fn:1] This section of the tutorial is partially inspired by the backbone "todo list" tutorial http://backbonejs.org/docs/todos.html
+
+[fn:2] Now, there's an interesting caveat here: in my initial attempt at writing this code, I set the ID in the initialize method of the base model, not in the creation of a model. This seemed entirely reasonable and I couldn't find anything in the documentation that made it seem wrong, but in /reality/ as far as I can tell if you try to set the ID in initialization, then every call to the model's ~save~ method will treat the model as being "new" as per the Backbone [[http://backbonejs.org/#Model-isNew][documentation]]. 
 
 
     

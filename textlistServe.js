@@ -1,8 +1,6 @@
 
 $(document).ready( function () {
 
-var idCount = 0;
-
 var TextModel = Backbone.Model.extend({
     defaults : {"value" : ""},
     initialize : function () {
@@ -49,6 +47,8 @@ var TextCollection = Backbone.Collection.extend({
         this.fetch();
     }
 });
+
+var idCount = 0;
 
 var TextCollectionView = Backbone.View.extend({
     render : function () {
