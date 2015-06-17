@@ -7,7 +7,7 @@
   + Organizing client-side code using Backbone
   + Communicating with a simple Node/Express server using Backbone
 
-For the first part, we're only presuming a small amount of base jQuery knowledge. In our second part, we'll be assuming some familiarity with Node but will include at least some review of the functions that we're using as we use them. For our final part, we'll be including a modest introduction to the functionality of MongoDB that we require for building our application. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we're developing. As this tutorial is written using [[http://orgmode.org/][org-mode]]'s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command ~C-c C-v C-t~. PDF and Markdown copies of this tutorial will also be included in the repository. 
+For the first part, we're only presuming a small amount of base jQuery knowledge. In our second part, we'll be assuming very mild familiarity with Node and Express, but we'll be at least be explaining all the functionality from Express that we need for the small servers that we're writing. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we're developing, but there are a few that will involve starting from scratch based off of the examples already seen. As this tutorial is written using [[http://orgmode.org/][org-mode]]'s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command ~C-c C-v C-t~. A Markdown copy of this tutorial will also be included in the repository. 
 * The Overall Point of Backbone
   If you're reading this, then it's likely that your ultimate goal is to understand how to make interactive web sites. One of the difficulties in writing larger and more complex sites is keeping all the code principled and well-organized. For example, consider the way that in templates you can have something like
 #+BEGIN_SRC jade :exports code
@@ -570,7 +570,12 @@ and navigate your browser to ~localhost:3000/counterServe.html~ see the applicat
    + a new ~<p>~ element to the view 
    + an event handler to the view that will update the text of this element every time a sync event is called
 **** Extra Credit
-     You'll note that as described, this field doesn't actually *persist* across refreshes of the page. In order to make it 
+     You'll note that as described, this field doesn't actually *persist* across refreshes of the page. In order to make it actually persist for the life of the server, we'll need to add a *new* view and model. The basic procedure is:
+     + define a new model for the refresh data
+       + define the URL root for the refresh model
+     + define a view for the refresh data
+     + have the refresh-model listen for the ~sync~ event on the counter model and update itself
+As with the other exercises in this section, test things out by refreshing the page and making sure that the data doesn't change.
 *** Decrement Button
     A simple exercise to try is to add a decrement button to the view and a decrement operation to the model that synchronizes up with the server correctly. Test your code by refreshing the page.
 *** Concatenating Text Fields
@@ -579,11 +584,43 @@ and navigate your browser to ~localhost:3000/counterServe.html~ see the applicat
    + add the appropriate ~save~ and ~fetch~ calls to the model to synchronize with the server
    + write a small server based on our example that will serve up our page and listen for Backbone's requests
 * Server Side Project: Collections 
-  In our final section, we'll be covering
-  + Backbone's Router class for providing nice URLs on the client side
-  + How to use IDs in URLs to index into collections
+  Next, as a short section we'll be covering how to synchronize Backbone collections with the server. To this end, we'll convert the previous text-fields examples to communicate with a small Express server much like we did in the previous section. 
 ** Exercises
 *** 
+* Project Ideas
+  In our final section, we'll be covering a few ideas for small, self-contained Backbone projects.
+** Grocery List App
+   A reasonable plan of action is to
+   + define a model for a grocery list item. It should include a
+     + name
+     + price
+     + quantity
+   + define a view for the grocery-list item model it should, at the minimum, have
+     + buttons to change the quantity
+     + an input field for the name of the item
+     + an input field for the price-per-item
+   + define a collection for the grocery list model and a *view* for said collection
+     + the view should include a button that will add a new model to the collection
+   + write a simple server that will keep all this data alive across refreshes of the page
+*** Extra Credit
+    Include one more piece of data: a budget. You'll need to make another model and view for the budget. In this case, though, you'll actually want the view for the budget to include *another* field that's the amount you have *left* after subtracting all the current groceries.
+    You can either
+    + have the remaining amount field recalculate when you click a button that's also in the budget's view
+    + have the remaining amount field recalculate whenever you've edited the grocery list
+** Sudoku Solver
+   If you've completed the sudoku solver project from [[http://portlandcodeschool.github.io/jsi/2015/06/16/sudoku/][Portland Code School's]] Javascript course, then you can absolutely use Backbone to provide a front-end to the sudoku solver.
+
+   Since in your previous efforts, a sudoku puzzle was represented as a sequence of numbers it would be rather natural to have a puzzle be represented by a collection of individual models for each square. Of course, that's not the only way we could do things. In terms of *logical* layout, you might want to have /rows/ that are collections of squares, and a /puzzle/ is a collection of rows. 
+
+   The basic outline of what you should do is:
+   + define a model and view for an individual cell
+   + define models and views for the entire puzzle
+     + with the intermmediate step of defining models and views for rows if that's how you're planning to do it
+     + add a button to the view that calls your solver on the server and then syncs the front end with the server
+*** Extra Credit
+    If you want to make your sudoku implementation more thorough, you can make it more interactive in terms of allowing users to create a sudoku puzzle from scratch by editing the fields. In this case, you might want to start with a completely *blank* puzzle and make the individual cells be editable. 
+** Anything You Want
+   Go ahead. You can actually try anything you'd like.
 * Footnotes
 
 [fn:1] This section of the tutorial is partially inspired by the backbone "todo list" tutorial http://backbonejs.org/docs/todos.html

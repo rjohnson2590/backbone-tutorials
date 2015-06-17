@@ -3,10 +3,9 @@
 In these notes we&rsquo;ll be covering several major topics: 
 
 -   Organizing client-side code using Backbone
--   Communicating with a Node server using Backbone
--   Syncing our data to a persistent store, in the form of a MongoDB database
+-   Communicating with a simple Node/Express server using Backbone
 
-For the first part, we&rsquo;re only presuming a small amount of base jQuery knowledge. In our second part, we&rsquo;ll be assuming some familiarity with Node but will include at least some review of the functions that we&rsquo;re using as we use them. For our final part, we&rsquo;ll be including a modest introduction to the functionality of MongoDB that we require for building our application. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we&rsquo;re developing. As this tutorial is written using [org-mode](http://orgmode.org/)&rsquo;s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command `C-c C-v C-t`. PDF and Markdown copies of this tutorial will also be included in the repository. 
+For the first part, we&rsquo;re only presuming a small amount of base jQuery knowledge. In our second part, we&rsquo;ll be assuming very mild familiarity with Node and Express, but we&rsquo;ll be at least be explaining all the functionality from Express that we need for the small servers that we&rsquo;re writing. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we&rsquo;re developing, but there are a few that will involve starting from scratch based off of the examples already seen. As this tutorial is written using [org-mode](http://orgmode.org/)&rsquo;s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command `C-c C-v C-t`. A Markdown copy of this tutorial will also be included in the repository. 
 
 # The Overall Point of Backbone
 
@@ -315,7 +314,7 @@ We&rsquo;re going to start our application very similar to how our previous proj
       </body>
     </html>
 
-Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll have a &ldquo;replace&rdquo; method that will replace the text inside it, but no others for now. It&rsquo;s individual view is going to be an input with the default text of the input set to the value of the model and a &ldquo;edit&rdquo; button that will set the model to be the current value of the text field. This part is basically the same as our previous project.
+Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll have a &ldquo;replace&rdquo; method that will replace the text inside it. It&rsquo;s individual view is going to be an input with the default text of the input set to the value of the model and a &ldquo;clear&rdquo; button that will set the text of the model to the empty string ~&rdquo; &ldquo;~ . This part is basically the same as our previous project, except that we&rsquo;re going to use a different **kind** of event, `keypress`, for setting the value of the text of the model. In particular, if the key pressed in the input field is the &ldquo;enter&rdquo; key, then we call the `replace` operator of the view, which will in turn call the `replace` method of the model.
 
     var TextModel = Backbone.Model.extend({
         defaults : {"value" : ""}
@@ -328,7 +327,7 @@ Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll hav
     var TextView = Backbone.View.extend({
         render: function () {
             var textVal = this.model.get("value");
-            var btn = '<button>Edit</button>';
+            var btn = '<button>Clear</button>';
             var input = '<input type="text" value="' + textVal + '" />';
             this.$el.html("<div>" + input + btn + "</div>");
         },
@@ -336,11 +335,20 @@ Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll hav
             this.model.on("change", this.render, this);
         },
         events : {
-            "click button" : "replace"
+            "click button" : "clear",
+            "keypress input" : "updateOnEnter"
         },
         replace : function () {
             var str = this.$el.find("input").val();
             this.model.replace(str);
+        },
+        clear: function () {
+            this.model.replace("");
+        },
+        updateOnEnter: function (e){
+            if(e.keyCode == 13) {
+                this.replace();
+            }
         }
     });
 
@@ -401,7 +409,7 @@ In this exercise, we&rsquo;re going to add a &ldquo;delete&rdquo; button that wi
 
 ### Edited Count
 
-In this exercise, you&rsquo;re going to add a new piece of data to the **base** model: the number of times that it&rsquo;s been edited. Every time the &ldquo;Edit&rdquo; button is clicked, it should increment this number. You&rsquo;ll need to also modify the view for the base model. 
+In this exercise, you&rsquo;re going to add a new piece of data to the **base** model: the number of times that it&rsquo;s been edited. Every time the field is edited, it should increment this number. In this case, &ldquo;edited&rdquo; means **either** cleared or you&rsquo;ve pressed enter while in the input field. You&rsquo;ll need to also modify the view for the base model. 
 Question: will you need to modify the view for the collection?
 
 1.  Extra Credit
@@ -410,23 +418,220 @@ Question: will you need to modify the view for the collection?
 
 # Server Side Project: Counter With Server
 
+## Outline
+
 In this section, we&rsquo;re going to show how to connect our first counter example with a simple Node server. By the end of this section we&rsquo;ll have shown
 
--   set the
+-   how to use Backbone to save models to a server
+    -   how to set the url route **used** by Backbone to communicate with the server
+    -   how to use synchronization methods for models such as `save` and `destroy`
 
-# Server Side Project: Collections and Databases
+## Lesson and Code
 
-In our final section, we&rsquo;ll be covering
+   First, let&rsquo;s put together our client side application and then go ahead and show how to write a simple server to go along with it. Our HTML isn&rsquo;t going to change, other than linking to a different file:
+file: counterServe.html
 
--   Backbone&rsquo;s Router class for providing nice URLs on the client side
--   How to use IDs in URLs to index into collections
--   What a full, but small, client-server application looks like in Backbone
+    <!doctype html>
+    <html>
+      <head>
+        <title>A Counter Example</title>
+        <script type="text/javascript" src="js/jquery-2.1.4.js"></script>
+        <script type="text/javascript" src="js/underscore.js"></script>
+        <script type="text/javascript" src="js/backbone.js"></script>
+        <script type="text/javascript" src="counterServe.js"></script>
+      </head>
+      <body>
+        <div id="counterdiv"></div>
+      </body>
+    </html>
+
+and we&rsquo;re going to **mostly** use the same Backbone code as our cleaned-up counter example.
+file: counterServe.js
+
+    $(document).ready( function () {
+    
+        var Counter = Backbone.Model.extend({
+            defaults : {"value" : 0},
+            urlRoot : "/counter"
+        });
+    
+        var counterModel1 = new Counter({id : 1});
+    
+        Counter.prototype.inc = function () {
+            var val = this.get("value");
+            this.set("value", val+1);
+            this.save();
+        }      
+    
+        counterModel1.fetch();
+
+the first real change is that we need to set the URL structure that&rsquo;s we&rsquo;re going to use for communicating with the server. In this case, we&rsquo;re going to use `/counter` as the basic route, so we set `urlRoot` to be `/counter`. When Backbone communicates with the server, it will send a message to `route/to/server/counter/id` where `id` is the value of the id of the counter. You might note that we hadn&rsquo;t **used** an ID before now, but by default Backbone needs an `id` to communicate with the server so we include it as a parameter when we create our model.
+
+The view is entirely unchanged from our previous code, since we&rsquo;ve localized all the interaction with the server into the model.
+
+        var CounterView = Backbone.View.extend({
+            render: function () {
+                var val = this.model.get("value");
+                var btn = '<button>Increment</button>';
+                this.$el.html('<p>'+val+'</p>' + btn);
+            },
+            initialize: function () {
+                this.model.on("change", this.render, this);
+            },
+            events : {
+                'click button' : 'increment'
+            },
+            increment : function () {
+                this.model.inc();
+            }
+        });
+    
+        var counterView1 = new CounterView({model : counterModel1});
+    
+        counterView1.render();
+    
+        $("#counterdiv").append(counterView1.$el);
+    
+    });
+
+and we&rsquo;ll also set up a simple Express server to serve up the the HTML statically and then have a couple of simple routes for handling the get and put from the client side. We&rsquo;ve already decided what routes we should be listening on: `/counter/1` is going to be the URL uses to talk to the server. 
+
+This server is fairly simple. We 
+
+-   set up the server application by calling `express()`
+-   initialize a variable that will store the counter, setting it to 0
+-   set up the needed middleware for
+    -   automatically parsing the request into JSON
+    -   serving up the local directory statically
+-   set up the routes for Backbone&rsquo;s use
+    -   a **get** request to `/counter/1` will send back an object that has the value of the counter
+    -   a **put** request to `/counter/1` will extract the value of the counter from the request and store it in the local variable
+
+    var express = require('express');
+    var bodyParser = require('body-parser');
+    
+    var app = express();
+    
+    var counter1 = 0;
+    
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(express.static(__dirname));
+    
+    app.get('/counter/1', function (req, res) {
+        console.log("counter has been requested");
+        res.send(JSON.stringify({value : counter1}));
+    });
+    
+    app.put('/counter/1', function (req, res) {
+        console.log(req.body);
+        counter1 = req.body.value;
+        res.end();
+    });
+    
+    app.listen(3000, function () {
+        console.log("server started");
+    });
+
+In order to actually run this code, we need to make sure that the appropriate libraries are installed, so run the following shell commands to get your local directory set up with the Node libraries needed. 
+
+    npm install express &&
+    npm install body-parser
+
+Then, go ahead and start the server with 
+
+    node counterServer.js
+
+and navigate your browser to `localhost:3000/counterServe.html` see the application. To test and make sure the synchronization with the server is working, try refreshing the page. You should see the value of the counter be restored to what it had been before the refresh. 
 
 ## Exercises
 
-### Grocery List App
+### Sync Events
 
-Our final set of exercises contains just a single task: create a small application from which users can log in, enter a new grocery list, access past grocery lists and sort items in grocery lists by some criterion.
+Every time `save` or `fetch` is called, a `sync` event is triggered for the model. Given this fact, go ahead and test this event out by adding 
+
+-   a new `<p>` element to the view
+-   an event handler to the view that will update the text of this element every time a sync event is called
+
+1.  Extra Credit
+
+    You&rsquo;ll note that as described, this field doesn&rsquo;t actually **persist** across refreshes of the page. In order to make it actually persist for the life of the server, we&rsquo;ll need to add a **new** view and model. The basic procedure is:
+    
+    -   define a new model for the refresh data
+        -   define the URL root for the refresh model
+    -   define a view for the refresh data
+    -   have the refresh-model listen for the `sync` event on the counter model and update itself
+    
+    As with the other exercises in this section, test things out by refreshing the page and making sure that the data doesn&rsquo;t change.
+
+### Decrement Button
+
+A simple exercise to try is to add a decrement button to the view and a decrement operation to the model that synchronizes up with the server correctly. Test your code by refreshing the page.
+
+### Concatenating Text Fields
+
+This exercise is a repeat of the Concatenating Text Fields of the first section, but this time you need to 
+
+-   choose a url path for the data
+-   add the appropriate `save` and `fetch` calls to the model to synchronize with the server
+-   write a small server based on our example that will serve up our page and listen for Backbone&rsquo;s requests
+
+# Server Side Project: Collections
+
+Next, as a short section we&rsquo;ll be covering how to synchronize Backbone collections with the server. To this end, we&rsquo;ll convert the previous text-fields examples to communicate with a small Express server much like we did in the previous section. 
+
+## Exercises
+
+### 
+
+# Project Ideas
+
+In our final section, we&rsquo;ll be covering a few ideas for small, self-contained Backbone projects.
+
+## Grocery List App
+
+A reasonable plan of action is to
+
+-   define a model for a grocery list item. It should include a
+    -   name
+    -   price
+    -   quantity
+-   define a view for the grocery-list item model it should, at the minimum, have
+    -   buttons to change the quantity
+    -   an input field for the name of the item
+    -   an input field for the price-per-item
+-   define a collection for the grocery list model and a **view** for said collection
+    -   the view should include a button that will add a new model to the collection
+-   write a simple server that will keep all this data alive across refreshes of the page
+
+### Extra Credit
+
+Include one more piece of data: a budget. You&rsquo;ll need to make another model and view for the budget. In this case, though, you&rsquo;ll actually want the view for the budget to include **another** field that&rsquo;s the amount you have **left** after subtracting all the current groceries.
+You can either
+
+-   have the remaining amount field recalculate when you click a button that&rsquo;s also in the budget&rsquo;s view
+-   have the remaining amount field recalculate whenever you&rsquo;ve edited the grocery list
+
+## Sudoku Solver
+
+If you&rsquo;ve completed the sudoku solver project from [Portland Code School&rsquo;s](http://portlandcodeschool.github.io/jsi/2015/06/16/sudoku/) Javascript course, then you can absolutely use Backbone to provide a front-end to the sudoku solver.
+
+Since in your previous efforts, a sudoku puzzle was represented as a sequence of numbers it would be rather natural to have a puzzle be represented by a collection of individual models for each square. Of course, that&rsquo;s not the only way we could do things. In terms of **logical** layout, you might want to have *rows* that are collections of squares, and a *puzzle* is a collection of rows. 
+
+The basic outline of what you should do is:
+
+-   define a model and view for an individual cell
+-   define models and views for the entire puzzle
+    -   with the intermmediate step of defining models and views for rows if that&rsquo;s how you&rsquo;re planning to do it
+    -   add a button to the view that calls your solver on the server and then syncs the front end with the server
+
+### Extra Credit
+
+If you want to make your sudoku implementation more thorough, you can make it more interactive in terms of allowing users to create a sudoku puzzle from scratch by editing the fields. In this case, you might want to start with a completely **blank** puzzle and make the individual cells be editable. 
+
+## Anything You Want
+
+Go ahead. You can actually try anything you&rsquo;d like.
 
 <div id="footnotes">
 <h2 class="footnotes">Footnotes: </h2>
