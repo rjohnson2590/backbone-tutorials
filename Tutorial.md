@@ -750,9 +750,13 @@ file: textlistServer.js
 Exercises
 ---------
 
-1.  Server Side IDs
+1.  Deletion
 
-2.  Deletion
+    Now, try to replicate the previous exericse for adding a delete button to the client-only text list project for having a **server** as well. You&rsquo;ll need to create a route for the delete call to remove the element from the server.
+    
+    1.  Extra Credit
+    
+        Add a delete button to the view of the individual models that will allow you to remove that particular model from the collection. 
 
 Project Ideas
 =============
@@ -811,7 +815,7 @@ Go ahead. You can actually try anything you&rsquo;d like.
 <h2 class="footnotes">Footnotes: </h2>
 <div id="text-footnotes">
 
-<div class="footdef"><sup><a id="fn.1" name="fn.1" class="footnum" href="#fnr.1">1</a></sup> This section of the tutorial is partially inspired by the backbone &ldquo;todo list&rdquo; tutorial <http://backbonejs.org/docs/todos.html></div>
+<div class="footdef"><sup><a id="fn.1" name="fn.1" class="footnum" href="#fnr.1">1</a></sup> This section of the tutorial is partially inspired by the backbone &ldquo;todo list&rdquo; [tutorial](http://backbonejs.org/docs/todos.html)</div>
 
 <div class="footdef"><sup><a id="fn.2" name="fn.2" class="footnum" href="#fnr.2">2</a></sup> Now, there&rsquo;s an interesting caveat here: in my initial attempt at writing this code, I set the ID in the initialize method of the base model, not in the creation of a model. This seemed entirely reasonable and I couldn&rsquo;t find anything in the documentation that made it seem wrong, but in *reality* as far as I can tell if you try to set the ID in initialization, then every call to the model&rsquo;s `save` method will treat the model as being &ldquo;new&rdquo; as per the Backbone [documentation](http://backbonejs.org/#Model-isNew).</div>
 

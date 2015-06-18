@@ -754,8 +754,11 @@ file: textlistServer.js
   app.listen(3000);
 #+END_SRC
 ** Exercises
-*** Server Side IDs
 *** Deletion
+    Now, try to replicate the previous exericse for adding a delete button to the client-only text list project for having a *server* as well. You'll need to create a route for the delete call to remove the element from the server.
+**** Extra Credit 
+     Add a delete button to the view of the individual models that will allow you to remove that particular model from the collection. 
+
 * Project Ideas
   In our final section, we'll be covering a few ideas for small, self-contained Backbone projects.
 ** Grocery List App
@@ -792,7 +795,7 @@ file: textlistServer.js
    Go ahead. You can actually try anything you'd like.
 * Footnotes
 
-[fn:1] This section of the tutorial is partially inspired by the backbone "todo list" tutorial http://backbonejs.org/docs/todos.html
+[fn:1] This section of the tutorial is partially inspired by the backbone "todo list" [[http://backbonejs.org/docs/todos.html][tutorial]]
 
 [fn:2] Now, there's an interesting caveat here: in my initial attempt at writing this code, I set the ID in the initialize method of the base model, not in the creation of a model. This seemed entirely reasonable and I couldn't find anything in the documentation that made it seem wrong, but in /reality/ as far as I can tell if you try to set the ID in initialization, then every call to the model's ~save~ method will treat the model as being "new" as per the Backbone [[http://backbonejs.org/#Model-isNew][documentation]]. 
 
