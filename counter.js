@@ -1,6 +1,4 @@
 
-$(document).ready( function () {
-
 var Counter = Backbone.Model.extend({
     defaults : {"value" : 0}
 });
@@ -13,6 +11,8 @@ var CounterView = Backbone.View.extend({
     }
 });
 
+$(document).ready( function () {
+
 var counterModel = new Counter();
 
 var counterView = new CounterView({model : counterModel});
@@ -22,7 +22,7 @@ counterModel.on("change", function () {
     counterView.render();
 });
 
-counterView.$el.on("button click", function () {
+counterView.$el.on("click","button", function () {
     var mod = counterView.model;
     var currVal = mod.get("value");
     mod.set("value",currVal+1);

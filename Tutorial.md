@@ -1,17 +1,15 @@
-Introduction to This Tutorial
-=============================
+# Introduction to This Tutorial
 
-In these notes we&rsquo;ll be covering several major topics: 
+In these notes we'll be covering several major topics: 
 
 -   Organizing client-side code using Backbone
 -   Communicating with a simple Node/Express server using Backbone
 
-For the first part, we&rsquo;re only presuming a small amount of base jQuery knowledge. In our second part, we&rsquo;ll be assuming very mild familiarity with Node and Express, but we&rsquo;ll be at least be explaining all the functionality from Express that we need for the small servers that we&rsquo;re writing. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we&rsquo;re developing, but there are a few that will involve starting from scratch based off of the examples already seen. As this tutorial is written using [org-mode](http://orgmode.org/)&rsquo;s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command `C-c C-v C-t`. A Markdown copy of this tutorial will also be included in the repository. 
+For the first part, we're only presuming a small amount of base jQuery knowledge. In our second part, we'll be assuming very mild familiarity with Node and Express, but we'll be at least be explaining all the functionality from Express that we need for the small servers that we're writing. The exercises in this tutorial will mostly consist of asking the user to extend the functionality of the applications we're developing, but there are a few that will involve starting from scratch based off of the examples already seen. As this tutorial is written using [org-mode](http://orgmode.org/)'s Babel functionality, all the source code of the applications in this tutorial is included in the text and can be extracted from the org-mode file using the Emacs command `C-c C-v C-t`. A Markdown copy of this tutorial will also be included in the repository. 
 
-The Overall Point of Backbone
-=============================
+# The Overall Point of Backbone
 
-If you&rsquo;re reading this, then it&rsquo;s likely that your ultimate goal is to understand how to make interactive web sites. One of the difficulties in writing larger and more complex sites is keeping all the code principled and well-organized. For example, consider the way that in templates you can have something like
+If you're reading this, then it's likely that your ultimate goal is to understand how to make interactive web sites. One of the difficulties in writing larger and more complex sites is keeping all the code principled and well-organized. For example, consider the way that in templates you can have something like
 
     body
       if someVariable
@@ -28,28 +26,27 @@ or you could have, at the javascript level, an if-statement like
         response.render('another-thing');
     }
 
-There are two different places where we could make the decision on what HTML to render by examining the same variable&rsquo;s value. Is one better than the other? That&rsquo;s a matter of opinion. What&rsquo;s less controversial is that you **don&rsquo;t** want to have a mix of logic in different places. If your project is putting lots of logic in the templates, you don&rsquo;t want to add a new page and have its display logic in the route handler or visa versa because your teammates (or yourself in a week&rsquo;s time) won&rsquo;t know where to look. 
+There are two different places where we could make the decision on what HTML to render by examining the same variable's value. Is one better than the other? That's a matter of opinion. What's less controversial is that you **don't** want to have a mix of logic in different places. If your project is putting lots of logic in the templates, you don't want to add a new page and have its display logic in the route handler or visa versa because your teammates (or yourself in a week's time) won't know where to look. 
 
-This problem becomes much more pronounced when we consider that sites these days deal with many different kinds of *data*. If we&rsquo;re Twitter, there&rsquo;s users, tweets, followers, lists etc. If we&rsquo;re a photosharing site such as Flickr or Instagram then there&rsquo;s going to be users and images as some of the most important data stored, and there&rsquo;s tags on the images that can be used to search. Essentially any website you&rsquo;ll be using has some kind of data that needs to be recorded in a database, loaded from the server to the client, displayed by rendering HTML, and then modified using the UI of the site, which we can look at as a reversal of the same path back from the DOM down to the server.
+This problem becomes much more pronounced when we consider that sites these days deal with many different kinds of *data*. If we're Twitter, there's users, tweets, followers, lists etc. If we're a photosharing site such as Flickr or Instagram then there's going to be users and images as some of the most important data stored, and there's tags on the images that can be used to search. Essentially any website you'll be using has some kind of data that needs to be recorded in a database, loaded from the server to the client, displayed by rendering HTML, and then modified using the UI of the site, which we can look at as a reversal of the same path back from the DOM down to the server.
 
 For each kind of data, tweets, users, images, etc. that entire pipeline of
 
     server <===> client code <===> DOM
 
-needs to be handled. There&rsquo;s many possibilities for **how** you organize the code that creates this pipeline, though, and potentially a lot of duplicated code when trying to create a framework that works for all the kinds of data in your application. This is where the concept of *separation of concerns* comes in. We&rsquo;re going to further divide the central &ldquo;client code&rdquo; part of our diagram into two components: the *model* and the *view*, which means our diagram is going to instead look like
+needs to be handled. There's many possibilities for **how** you organize the code that creates this pipeline, though, and potentially a lot of duplicated code when trying to create a framework that works for all the kinds of data in your application. This is where the concept of *separation of concerns* comes in. We're going to further divide the central "client code" part of our diagram into two components: the *model* and the *view*, which means our diagram is going to instead look like
 
     server <===> model <===> view <===> DOM
 
 where the *model* is the part that contains **a particular piece of data** on the client side (a tweet, an image, a user profile) and controls syncing the client and server data together, and the *view* is the part that creates the HTML for display the data **and** handles UI actions that will modify the data in the model. 
 
-If we divide things this way, the job of knowing how to write our code gets a bit simpler. If we&rsquo;re writing code that&rsquo;s syncing data with the server, that needs to go into our &ldquo;model&rdquo; code for that type of data. If we&rsquo;re writing code that&rsquo;s building the user interface dynamically from data, such as a list of tweets, then that needs to go in our &ldquo;view&rdquo; code. 
+If we divide things this way, the job of knowing how to write our code gets a bit simpler. If we're writing code that's syncing data with the server, that needs to go into our "model" code for that type of data. If we're writing code that's building the user interface dynamically from data, such as a list of tweets, then that needs to go in our "view" code. 
 
-Of course, there&rsquo;s going to be a lot of replication if we perform this model/view division for all the data in our web app and we **certainly** don&rsquo;t want to write a new framework for each application we work on. We also need to write the glue code that allows the server to communicate with the models, the models communicate with the views, and the views communicate with the DOM. This is where Backbone comes in. 
+Of course, there's going to be a lot of replication if we perform this model/view division for all the data in our web app and we **certainly** don't want to write a new framework for each application we work on. We also need to write the glue code that allows the server to communicate with the models, the models communicate with the views, and the views communicate with the DOM. This is where Backbone comes in. 
 
-Backbone is a library that comes with pre-defined model and view classes that you can easily customize for your particular application, with built in code and techniques to keep the models and views in sync with each other. As such, Backbone actually has a lot of the tedious code to setup this model/view dichotomy written once and for all, leaving you to worry about the specifics of your application and not the general problem of separating concerns. B
+Backbone is a library that comes with pre-defined model and view classes that you can easily customize for your particular application, with built in code and techniques to keep the models and views in sync with each other. As such, Backbone actually has a lot of the tedious code to setup this model/view dichotomy written once and for all, leaving you to worry about the specifics of your application and not the general problem of separating concerns.
 
-In this tutorial, we&rsquo;ll be covering how to use Backbone for applications. We&rsquo;ll be covering how to 
-
+In this tutorial, we'll be covering how to use Backbone for applications. We'll be covering how to 
 -   extend Backbone models
 -   extend Backbone views
 -   connect views to models
@@ -57,22 +54,20 @@ In this tutorial, we&rsquo;ll be covering how to use Backbone for applications. 
 -   use models to communicate with the server
 -   render views and insert them into the DOM
 
-The structure of this tutorial is that we&rsquo;ll start first by leaving off the server, so instead we&rsquo;ll be examining just this picture
+The structure of this tutorial is that we'll start first by leaving off the server, so instead we'll be examining just this picture
 
     model <===> view <===> DOM
 
-and then after getting more comfortable with that picture, we&rsquo;ll add in a server and a database. 
+and then after getting more comfortable with that picture, we'll add in a server and a database. 
 
-Installation
-============
+# Installation
 
 In order to get started, you need to download the following files and place them in the `../js` directory of this repository
-
 -   [Backbone](http://backbonejs.org/backbone.js)
 -   [Underscore](http://underscorejs.org/underscore.js)
 -   [jQuery](http://code.jquery.com/jquery-2.1.4.js)
 
-or, at least on Linux but possibly OS X if you have &ldquo;wget&rdquo; installed, you should be able to run the following shell command to install all of this software locally
+or, at least on Linux but possibly OS X if you have "wget" installed, you should be able to run the following shell command to install all of this software locally
 
     mkdir js &&
     cd js && 
@@ -80,35 +75,29 @@ or, at least on Linux but possibly OS X if you have &ldquo;wget&rdquo; installed
     wget http://underscorejs.org/underscore.js && 
     wget http://code.jquery.com/jquery-2.1.4.js
 
-Your First Backbone Project: A Simple Counter
-=============================================
+# Your First Backbone Project: A Simple Counter
 
-Outline
--------
+## Outline
 
-In this brief project, we&rsquo;re going to create a client side application that will
-
+In this brief project, we're going to create a client side application that will
 -   display a number
 -   provide a button that allows you to *increase* the number in the counter
 
-What we&rsquo;re going to cover in this section is: 
-
+What we're going to cover in this section is: 
 -   How to create Backbone models and views
     -   Learn about the specific `get` and `set` methods for Backbone models
 -   How to render HTML using a view
 -   How to connect a model to a view
 -   How to use events to ensure that the **view** updates when the **model** changes and the **model** changes when inputs in the **view** are used
 
-The basic outline is that we&rsquo;ll
-
+The basic outline is that we'll
 1.  create a model
 2.  create a view connected to this model
 3.  install our event handlers
 
-Lesson and Example Code
------------------------
+## Lesson and Example Code
 
-First things first, we need to have our base HTML for the application. In this case, we&rsquo;re going to have a rather simple HTML page that initially contains a `<div>` where we&rsquo;re going to place our counter and a button that we&rsquo;ll use to increment the counter.
+First things first, we need to have our base HTML for the application. In this case, we're going to have a rather simple HTML page that initially contains a `<div>` where we're going to place our counter and a button that we'll use to increment the counter.
 
 file: counter.html
 
@@ -126,9 +115,7 @@ file: counter.html
       </body>
     </html>
 
-As for our javascript file `counter.js`, don&rsquo;t forget to wrap up all our code in a `$(document).ready(function () {})`.
-
-Now, the first thing we&rsquo;re going to do is build our *model*. As discussed in our introduction, a model is the thing that **contains** data in our application. All models are built by calling `Backbone.Model.extend(some-object-with-built-in-data)`. We&rsquo;ll talk about the kinds of things we put in `Backbone.Model.extend` as we need them, but to begin with we&rsquo;re going to have a very **simple** model: our goal is to have a single special property called &ldquo;value&rdquo; that will contain the value of the counter and is going to be modified by our button. To that end, we are going to include the single property `defaults`, which is a list of default values for the special data of our application. 
+Now, in our javascript file `counter.js`, the first thing we're going to do is build our *model*. As discussed in our introduction, a model is the thing that **contains** data in our application. All models are built by calling `Backbone.Model.extend(some-object-with-built-in-data)`. We'll talk about the kinds of things we put in `Backbone.Model.extend` as we need them, but to begin with we're going to have a very **simple** model: our goal is to have a single special property called "value" that will contain the value of the counter and is going to be modified by our button. To that end, we are going to include the single property `defaults`, which is a list of default values for the special data of our application. 
 
 file: counter.js
 
@@ -136,14 +123,14 @@ file: counter.js
         defaults : {"value" : 0}
     });
 
-You might wonder why we&rsquo;re using `defaults` and not just, say, creating a property of Counter called `value` like in the following code
+You might wonder why we're using `defaults` and not just, say, creating a property of Counter called `value` like in the following code
 
     var Counter = Backbone.Model.extend();
     Counter.prototype.value = 0;
 
-thus causing any instance of `Counter` to have a property `value` which defaults to 0. The basic reason is that we want to use Backbone&rsquo;s *events* to synchronize the model and the view together. In order to use Backbone events, we don&rsquo;t want to use the built in syntax for object properties but rather the `.get()` and `.set()` methods instead.
+thus causing any instance of `Counter` to have a property `value` which defaults to 0. The basic reason is that we want to use Backbone's *events* to synchronize the model and the view together. In order to use Backbone events, we don't want to use the built in syntax for object properties but rather the `.get()` and `.set()` methods instead.
 
-The next thing we do in our code is make a *view*, which is going to be similar to be very similar to a model with the exception that we need to define its `render` function, which actually generates HTML from the data in the associated model. We&rsquo;ve already decided, using our `defaults` property when creating the `Counter` class, that all counters are going to have a property called `value` which holds the value of the counter. 
+The next thing we do in our code is make a *view*, which is going to be similar to be very similar to a model with the exception that we need to define its `render` function, which actually generates HTML from the data in the associated model. We've already decided, using our `defaults` property when creating the `Counter` class, that all counters are going to have a property called `value` which holds the value of the counter. 
 
     var CounterView = Backbone.View.extend({
         render: function () {
@@ -153,27 +140,27 @@ The next thing we do in our code is make a *view*, which is going to be similar 
         }
     });
 
-The next thing we need to do is actually create instances of both our model and a view attached to said model:
+The next thing we need to do is actually create instances of both our model and a view attached to said model.  The instances need to use DOM elements, so they should be wrapped in a `$(document).ready(function () {})`.
 
     var counterModel = new Counter();
     
     var counterView = new CounterView({model : counterModel});
     counterView.render();
 
-We&rsquo;re almost done, but we still need to set our event handlers. The first one that we&rsquo;re going to do is the `model` event &ldquo;change&rdquo;, which will fire whenever an attribute of the model changes:
+We're almost done, but we still need to set our event handlers. The first one that we're going to do is the `model` event "change", which will fire whenever an attribute of the model changes:
 
     counterModel.on("change", function () {
         counterView.render();
     });
 
-Specifically, we&rsquo;re saying that whenever the model changes the only thing we need to do is re-render the associated view. This takes care of the direction of 
+Specifically, we're saying that whenever the model changes the only thing we need to do is re-render the associated view. This takes care of the direction of 
 
     model ===> view ===> DOM
 
 but what about the reverse direction?
-To do that, we&rsquo;re going to install an event handler on the button so that whenever it is clicked, the counter will increment
+To do that, we're going to install an event handler on the button so that whenever it is clicked, the counter will increment
 
-    counterView.$el.on("button click", function () {
+    counterView.$el.on("click","button", function () {
         var mod = counterView.model;
         var currVal = mod.get("value");
         mod.set("value",currVal+1);
@@ -183,43 +170,39 @@ Finally, we run the code that inserts the `$el` element of the view into the DOM
 
     $("#counterdiv").append(counterView.$el);
 
-Now, all that&rsquo;s left is to load our page and take a look!
+Now, all that's left is to load our page and take a look!
 
-Exercises
----------
+## Exercises
 
-1.  Subtraction Button
+### Subtraction Button
 
-    For this exercise, take the counter example we walked through above and add another button that will *decrement* the counter instead. You&rsquo;ll need to 
-    
-    1.  modify the render function
-    2.  modify the existing event handler for the increment function to be more specific
-    3.  make a new decrement button event handler
-    
-    1.  Bonus Challenge
-    
-        Ensure that the counter **is not changed** if its value is equal to zero. In other words, not only should the counter&rsquo;s value not dip below 0 but the `change` event in the model shouldn&rsquo;t be triggered if the value is 0. Test and ensure it&rsquo;s not firing by placing a `console.log` statement in the `change` event handler
+For this exercise, take the counter example we walked through above and add another button that will *decrement* the counter instead. You'll need to 
+1.  modify the render function
+2.  modify the existing event handler for the increment function to be more specific
+3.  make a new decrement button event handler
 
-2.  Clear Button
+1.  Bonus Challenge
 
-    In addition to or perhaps in lieu of the previous exercise, add a button that resets the counter back to 0. Like the previous exercise, you&rsquo;ll need to
-    
-    1.  modify the render function
-    2.  modify the existing event handler for the increment button
-    3.  make a new button to reset the counter
+    Ensure that the counter **is not decremented** if its value is equal to zero. In other words, not only should the counter's value not dip below 0 but the `change` event in the model shouldn't be triggered if the value is 0. Test and ensure it's not firing by placing a `console.log` statement in the `change` event handler
 
-3.  Concatenating Text Field
+### Clear Button
 
-    In this exercise, you should start **from scratch** and write a new application that will have
-    
-    -   an input text field
-    -   a button labled concatenate
-    -   a place for the entered text to be displayed
+In addition to or perhaps in lieu of the previous exercise, add a button that resets the counter back to 0. Like the previous exercise, you'll need to
+1.  modify the render function
+2.  modify the existing event handler for the increment button
+3.  make a new button to reset the counter
 
-Cleaning Up Our Code
---------------------
+### Concatenating Text Field
 
-There&rsquo;s a little bit of ugliness in our code that was there for the sake of pedagogical order: we&rsquo;re **manually** connecting the event handler for the model back to the view and we&rsquo;re also including too much logic of the **model** in the **view** event handlers. This wasn&rsquo;t so bad for our tiny example, but what if we want to have more than one instance of the model? It&rsquo;s going to be annoying to connect everything together correctly and rewrite the model handling code in each view. We&rsquo;re going to present a bit of a cleaned up version of the code that will be better refactored and show that it&rsquo;s easier to insert multiple model/view pairs into the application. We&rsquo;re going to go a little bit faster than the previous time.
+In this exercise, you should start **from scratch** and write a new application that will have
+-   an input text field,
+-   a button labled concatenate,
+-   a place for the entered text to be displayed.
+    Whenever the button is pushed, the displayed text (stored in a model) should append to itself whatever string was input.
+
+## Cleaning Up Our Code
+
+There's a little bit of ugliness in our code that was there for the sake of pedagogical order: we're **manually** connecting the event handler for the model back to the view and we're also including too much logic of the **model** in the **view** event handlers. This wasn't so bad for our tiny example, but what if we want to have more than one instance of the model? It's going to be annoying to connect everything together correctly and rewrite the model handling code in each view. We're going to present a bit of a cleaned up version of the code that will be better refactored and show that it's easier to insert multiple model/view pairs into the application. We're going to go a little bit faster than the previous time.
 
 in our file counterClean.js
 
@@ -232,7 +215,7 @@ in our file counterClean.js
         this.set("value", val+1);
     }
 
-The first thing we&rsquo;re doing is including a method in the `Counter` class for handling the incrementin. The next thing we&rsquo;re going to do is give the `CounterView` class an initialize method that will install the right event handler on the model that will cause the view to be updated whenever the model changes. For convenience, we&rsquo;re also going to use the &ldquo;events&rdquo; property of the view to make sure that we install the right event handler for the view upon its creation. 
+The first thing we're doing is including a method in the `Counter` class for handling the incrementing. The next thing we're going to do is give the `CounterView` class an initialize method that will install the right event handler on the model that will cause the view to be updated whenever the model changes. For convenience, we're also going to use the "events" property of the view to make sure that we install the right event handler for the view upon its creation. 
 
     var CounterView = Backbone.View.extend({
         render: function () {
@@ -251,22 +234,23 @@ The first thing we&rsquo;re doing is including a method in the `Counter` class f
         }
     });
 
-Now! We can go ahead and make our models and views and insert them into the DOM.
+Now, within the `$(document).ready` wrapper, we can go ahead and make our models and views and insert them into the DOM.
 
-    var counterModel1 = new Counter();
-    var counterModel2 = new Counter();
+    $(document).ready( function () {
+      var counterModel1 = new Counter();
+      var counterModel2 = new Counter();
     
-    var counterView1 = new CounterView({model : counterModel1});
-    var counterView2 = new CounterView({model : counterModel2});
+      var counterView1 = new CounterView({model : counterModel1});
+      var counterView2 = new CounterView({model : counterModel2});
     
-    counterView1.render();
-    counterView2.render();
+      counterView1.render();
+      counterView2.render();
     
-    $("#counterdiv").append(counterView1.$el);
-    $("#counterdiv").append(counterView2.$el);
+      $("#counterdiv").append(counterView1.$el);
+      $("#counterdiv").append(counterView2.$el);
+    });
 
-Questions To Think About
-------------------------
+## Questions To Think About
 
 1.  Why do we include the increment button in the view and not the base HTML?
 2.  Think about sites you use frequently and sketch out how they might be divided into
@@ -274,32 +258,27 @@ Questions To Think About
     -   views
     -   events
 
-Collections Project: Text Lists
-===============================
+# Collections Project: Text Lists
 
-Outline
--------
+## Outline
 
-In this project, we&rsquo;re going to again create a *client side only* application that
-
+In this project, we're going to again create a *client side only* application that
 -   displays a list of items
 -   contains a text field and a submit button that will add the entered text to the list
 
-What we&rsquo;re going to cover in this section is:
-
+What we're going to cover in this section is:
 -   How to create a Backbone *collection* of models
 -   How to create view for a collection
--   How to make the collection&rsquo;s view delegate to individual views
+-   How to make the collection's view delegate to individual views
 -   How to use the collection specific events to keep the view in-sync
 
-Lesson and Code
----------------
+## Lesson and Code
 
-When you&rsquo;re dealing with sites like twitter, or instagram, or anythig of that ilk there tend to be **collections** of things. You&rsquo;re reading a *list* of tweets, looking at a *list* of search results, examining a *list* of photos that match a tag, checking a *list* of followers etc. 
+When you're dealing with sites like twitter, or instagram, or anything of that ilk there tend to be **collections** of things. You're reading a *list* of tweets, looking at a *list* of search results, examining a *list* of photos that match a tag, checking a *list* of followers etc. 
 
-In other words, there&rsquo;s a lot of &ldquo;list-like&rdquo; things in the data that we&rsquo;re seeing constantly online. This is such a common pattern that Backbone has, built-in, a *Collection* class that allows you to have &ldquo;lists&rdquo; of models that can listen for special list-specific events such as adding or removing from the list. 
+In other words, there's a lot of "list-like" things in the data that we're seeing constantly online. This is such a common pattern that Backbone has, built-in, a *Collection* class that allows you to have "lists" of models that can listen for special list-specific events such as adding or removing from the list. 
 
-The basic way that Backbone *collections* work is that you associate to each collection the kind of **model** that it&rsquo;s a list of. You still have individual views for each model, though, and we leave the bulk of the work for handling the display and manipulation of data to the **individual** model/view pairs. We&rsquo;ll also have a view for the **collection**, that will handle how the list is displayed. To this end, we&rsquo;re going to proceed by
+The basic way that Backbone *collections* work is that you associate to each collection the kind of **model** that it's a list of. You still have individual views for each model, though, and we leave the bulk of the work for handling the display and manipulation of data to the **individual** model/view pairs. We'll also have a view for the **collection**, that will handle how the list is displayed. To this end, we're going to proceed by
 
 1.  writing our base html
 2.  defining the model and view for our text data
@@ -310,7 +289,7 @@ The basic way that Backbone *collections* work is that you associate to each col
     -   the view will also include the button that adds a new element to the collection
         -   this will trigger the `add` event for the collection
 
-We&rsquo;re going to start our application very similar to how our previous project started: with some very simple HTML. <sup><a id="fnr.1" name="fnr.1" class="footref" href="#fn.1">1</a></sup>
+We're going to start our application very similar to how our previous project started: with some very simple HTML. 
 
     <!doctype html>
     <html>
@@ -326,25 +305,26 @@ We&rsquo;re going to start our application very similar to how our previous proj
       </body>
     </html>
 
-Next, we&rsquo;ll start with our basic model of a piece of text. It&rsquo;ll have a &ldquo;replace&rdquo; method that will replace the text inside it. It&rsquo;s individual view is going to be an input with the default text of the input set to the value of the model and a &ldquo;clear&rdquo; button that will set the text of the model to the empty string ~&rdquo; &ldquo;~ . This part is basically the same as our previous project, except that we&rsquo;re going to use a different **kind** of event, `keypress`, for setting the value of the text of the model. In particular, if the key pressed in the input field is the &ldquo;enter&rdquo; key, then we call the `replace` operator of the view, which will in turn call the `replace` method of the model.
+Next, we'll start with our basic model of a piece of text. It'll have a "replace" method that will replace the text inside it. Its individual view is going to be an input with the default text of the input set to the value of the model and a "clear" button that will set the text of the model to the empty string ~" "~ . This part is basically the same as our previous project, except that we're going to use a different **kind** of event, `keypress`, for setting the value of the text of the model. In particular, if the key pressed in the input field is the "enter" key, then we call the `replace` operator of the view, which will in turn call the `replace` method of the model.
 
     var TextModel = Backbone.Model.extend({
-        defaults : {"value" : ""}
+        defaults : {"value" : ""},
+        replace : function (str) {
+          this.set("value", str);
+        }
     });
-    
-    TextModel.prototype.replace = function (str) {
-        this.set("value", str);
-    };
     
     var TextView = Backbone.View.extend({
         render: function () {
             var textVal = this.model.get("value");
             var btn = '<button>Clear</button>';
             var input = '<input type="text" value="' + textVal + '" />';
-            this.$el.html("<div>" + input + btn + "</div>");
+            this.$el.html(textVal+"<br><div>" + input + btn + "</div>");
         },
         initialize: function () {
             this.model.on("change", this.render, this);
+            // last argument 'this' ensures that render's
+            // 'this' means the view, not the model
         },
         events : {
             "click button" : "clear",
@@ -370,7 +350,7 @@ Next, we actually define the collection. This is pretty similar to all the other
         model : TextModel
     });
 
-After this, we need to make our view for the **collection** and write our event handlers for the collection. This is going to be the bulk of our moving parts for this program. The view for the collection will display all of our individual views as well have a button that will add a new &ldquo;blank&rdquo; text field into our page (with the default text &ldquo;Enter something here&rdquo;). 
+After this, we need to make our view for the **collection** and write our event handlers for the collection. This is going to be the bulk of our moving parts for this program. The view for the collection will display all of our individual views as well have a button that will add a new "blank" text field into our page (with the default text "Enter something here"). 
 
     var TextCollectionView = Backbone.View.extend({
         render : function () {
@@ -379,25 +359,30 @@ After this, we need to make our view for the **collection** and write our event 
             this.$el.html(div + btn);
         },
         initialize : function () {
-            this.listenTo(this.collection, 'add', this.addOne);
+            this.listenTo(this.collection, 'add', this.addView);
         },
         events : {
-            "click #addbutton" : "addCollection"
+            "click #addbutton" : "addModel"
         },
-        addOne : function (txt) {
-            txt.set("value","Enter something here...");
-            var view = new TextView({model : txt});
+        addModel : function () {
+            this.collection.add({});
+            // collection adds a model, fires add event, then listener calls this.addView(model)
+        },
+        addView : function (newModel) {
+            newModel.set("value","Enter something here...");
+            var view = new TextView({model : newModel});
             view.render();
             this.$("#text-list").append(view.$el);
         },
-        addCollection : function () {
-            this.collection.create();
-        }
     });
 
-There&rsquo;s a few pieces here that we should explain in a bit more detail. First, we&rsquo;re using the more convenient function `listenTo` this time, which in this case means that `this.collection` is now listening on the `add` event and, when it fires, will run `this.addOne` **in the context of the view, not the collection**. Basically, this just lets us avoid including the extra `this` parameter like in our individual model. Calling `addOne` takes the newly added model, creates a view for it, renders it, then adds it to the list of views. We use `events` to listen for when the button is clicked and then we run `addCollection`. In turn, `addCollection` will call the `create` method of the collection. The importance of `create` is that it will simultaneously make a new model and add it to the collection, triggering the `add` event that we&rsquo;re already listening for. 
+There's a few pieces here that we should explain in a bit more detail. First, we're using the more convenient function `listenTo` this time, which in this case means that `this.collection` is now listening on the `add` event and, when it fires, will run `this.addView` with the new model as an argument.  Also, `listenTo` calls the event handler **in the context of the view, not the collection**, so that `this` means the view. Basically, this just lets us avoid including the extra `this` parameter like in our individual model. Calling `addView` takes the newly added model, creates a view for it, renders it, then adds it to the list of views. We use `events` to listen for when the button is clicked and then we run `addModel`. In turn, `addModel` will call the `add` method of the collection. The importance of `add` is that it will simultaneously make a new model and add it to the collection, triggering the `add` event that we're already listening for. 
 
-Note that we don&rsquo;t have to say **anything** in the view for the collection about how the view of the individual model works. We just call that individual view&rsquo;s render function and allow it to take care of everything. 
+<aside>
+Collections also have a *create* method, which works just like *add* but also persists the new model to a server if there is one.
+</aside>
+
+Note that we don't have to say **anything** in the view for the collection about how the view of the individual model works. We just call that individual view's render function and allow it to take care of everything. 
 
 Finally, we go ahead and run the code we need to initialize the whole application:
 
@@ -409,42 +394,36 @@ Finally, we go ahead and run the code we need to initialize the whole applicatio
     
     $("#listdiv").append(textCollectionView.$el);
 
-Exercises
----------
+## Exercises
 
-1.  Delete Button
+### Delete Button
 
-    In this exercise, we&rsquo;re going to add a &ldquo;delete&rdquo; button that will erase the bottom element of the list of elements. To do that, you&rsquo;re going to need to 
-    
-    -   add a delete button to the view of the **collection**
-    -   add a event handler that listens for the &ldquo;remove&rdquo; event for the collection and refreshes the list, removing the corresponding view from the DOM.
-        -   there&rsquo;s more than one way you could do this, but a simple way might be to use CSS psuedo-selectors to select only the last div in the collection
+In this exercise, we're going to add a "delete" button that will erase the bottom element of the list of elements. To do that, you're going to need to 
+-   add a delete button to the view of the **collection**;
+-   add a event handler that listens for the "remove" event for the collection and refreshes the list, removing the corresponding view from the DOM.
+    There's more than one way you could do this, but a simple way might be to use CSS pseudo-selectors to select only the last div in the collection
 
-2.  Edited Count
+### Edited Count
 
-    In this exercise, you&rsquo;re going to add a new piece of data to the **base** model: the number of times that it&rsquo;s been edited. Every time the field is edited, it should increment this number. In this case, &ldquo;edited&rdquo; means **either** cleared or you&rsquo;ve pressed enter while in the input field. You&rsquo;ll need to also modify the view for the base model. 
-    Question: will you need to modify the view for the collection?
-    
-    1.  Extra Credit
-    
-        To be a little more challenging, make sure that the number-of-times-incremented only increases if the text has actually changed.
+In this exercise, you're going to add a new piece of data to the **base** model: the number of times that it's been edited. Every time the field is edited, it should increment this number. In this case, "edited" means **either** cleared or you've pressed enter while in the input field. You'll need to also modify the view for the base model. 
+Question: will you need to modify the view for the collection?
 
-Server Side Project: Counter With Server
-========================================
+1.  Extra Credit
 
-Outline
--------
+    To be a little more challenging, make sure that the number-of-times-incremented only increases if the text has actually changed.
 
-In this section, we&rsquo;re going to show how to connect our first counter example with a simple Node server. By the end of this section we&rsquo;ll have shown
+# Server Side Project: Counter With Server
 
+## Outline
+
+In this section, we're going to show how to connect our first counter example with a simple Node server. By the end of this section we'll have shown
 -   how to use Backbone to save models to a server
     -   how to set the url route **used** by Backbone to communicate with the server
     -   how to use synchronization methods for models such as `save` and `destroy`
 
-Lesson and Code
----------------
+## Lesson and Code
 
-   First, let&rsquo;s put together our client side application and then go ahead and show how to write a simple server to go along with it. Our HTML isn&rsquo;t going to change, other than linking to a different file:
+   First, let's put together our client side application and then go ahead and show how to write a simple server to go along with it. Our HTML isn't going to change, other than linking to a different file:
 file: counterServe.html
 
     <!doctype html>
@@ -461,7 +440,7 @@ file: counterServe.html
       </body>
     </html>
 
-and we&rsquo;re going to **mostly** use the same Backbone code as our cleaned-up counter example.
+and we're going to **mostly** use the same Backbone code as our cleaned-up counter example.
 file: counterServe.js
 
     $(document).ready( function () {
@@ -481,9 +460,9 @@ file: counterServe.js
     
         counterModel1.fetch();
 
-the first real change is that we need to set the URL structure that&rsquo;s we&rsquo;re going to use for communicating with the server. In this case, we&rsquo;re going to use `/counter` as the basic route, so we set `urlRoot` to be `/counter`. When Backbone communicates with the server, it will send a message to `route/to/server/counter/id` where `id` is the value of the id of the counter. You might note that we hadn&rsquo;t **used** an ID before now, but by default Backbone needs an `id` to communicate with the server so we include it as a parameter when we create our model.
+the first real change is that we need to set the URL structure that's we're going to use for communicating with the server. In this case, we're going to use `/counter` as the basic route, so we set `urlRoot` to be `/counter`. When Backbone communicates with the server, it will send a message to `route/to/server/counter/id` where `id` is the value of the id of the counter. You might note that we hadn't **used** an ID before now, but by default Backbone needs an `id` to communicate with the server so we include it as a parameter when we create our model.
 
-The view is entirely unchanged from our previous code, since we&rsquo;ve localized all the interaction with the server into the model.
+The view is entirely unchanged from our previous code, since we've localized all the interaction with the server into the model.
 
         var CounterView = Backbone.View.extend({
             render: function () {
@@ -510,16 +489,15 @@ The view is entirely unchanged from our previous code, since we&rsquo;ve localiz
     
     });
 
-and we&rsquo;ll also set up a simple Express server to serve up the the HTML statically and then have a couple of simple routes for handling the get and put from the client side. We&rsquo;ve already decided what routes we should be listening on: `/counter/1` is going to be the URL uses to talk to the server. 
+and we'll also set up a simple Express server to serve up the the HTML statically and then have a couple of simple routes for handling the get and put from the client side. We've already decided what routes we should be listening on: `/counter/1` is going to be the URL uses to talk to the server. 
 
 This server is fairly simple. We 
-
 -   set up the server application by calling `express()`
 -   initialize a variable that will store the counter, setting it to 0
 -   set up the needed middleware for
     -   automatically parsing the request into JSON
     -   serving up the local directory statically
--   set up the routes for Backbone&rsquo;s use
+-   set up the routes for Backbone's use
     -   a **get** request to `/counter/1` will send back an object that has the value of the counter
     -   a **put** request to `/counter/1` will extract the value of the counter from the request and store it in the local variable
 
@@ -562,51 +540,44 @@ Then, go ahead and start the server with
 
 and navigate your browser to `localhost:3000/counterServe.html` see the application. To test and make sure the synchronization with the server is working, try refreshing the page. You should see the value of the counter be restored to what it had been before the refresh. 
 
-Exercises
----------
+## Exercises
 
-1.  Sync Events
+### Sync Events
 
-    Every time `save` or `fetch` is called, a `sync` event is triggered for the model. Given this fact, go ahead and test this event out by adding 
+Every time `save` or `fetch` is called, a `sync` event is triggered for the model. Given this fact, go ahead and test this event out by adding 
+-   a new `<p>` element to the view
+-   an event handler to the view that will update the text of this element every time a sync event is called
+
+1.  Extra Credit
+
+    You'll note that as described, this field doesn't actually **persist** across refreshes of the page. In order to make it actually persist for the life of the server, we'll need to add a **new** view and model. The basic procedure is:
+    -   define a new model for the refresh data
+        -   define the URL root for the refresh model
+    -   define a view for the refresh data
+    -   have the refresh-model listen for the `sync` event on the counter model and update itself
     
-    -   a new `<p>` element to the view
-    -   an event handler to the view that will update the text of this element every time a sync event is called
-    
-    1.  Extra Credit
-    
-        You&rsquo;ll note that as described, this field doesn&rsquo;t actually **persist** across refreshes of the page. In order to make it actually persist for the life of the server, we&rsquo;ll need to add a **new** view and model. The basic procedure is:
-        
-        -   define a new model for the refresh data
-            -   define the URL root for the refresh model
-        -   define a view for the refresh data
-        -   have the refresh-model listen for the `sync` event on the counter model and update itself
-        
-        As with the other exercises in this section, test things out by refreshing the page and making sure that the data doesn&rsquo;t change.
+    As with the other exercises in this section, test things out by refreshing the page and making sure that the data doesn't change.
 
-2.  Decrement Button
+### Decrement Button
 
-    A simple exercise to try is to add a decrement button to the view and a decrement operation to the model that synchronizes up with the server correctly. Test your code by refreshing the page.
+A simple exercise to try is to add a decrement button to the view and a decrement operation to the model that synchronizes up with the server correctly. Test your code by refreshing the page.
 
-3.  Concatenating Text Fields
+### Concatenating Text Fields
 
-    This exercise is a repeat of the Concatenating Text Fields of the first section, but this time you need to 
-    
-    -   choose a url path for the data
-    -   add the appropriate `save` and `fetch` calls to the model to synchronize with the server
-    -   write a small server based on our example that will serve up our page and listen for Backbone&rsquo;s requests
+This exercise is a repeat of the Concatenating Text Fields of the first section, but this time you need to 
+-   choose a url path for the data
+-   add the appropriate `save` and `fetch` calls to the model to synchronize with the server
+-   write a small server based on our example that will serve up our page and listen for Backbone's requests
 
-Server Side Project: Collections
-================================
+# Server Side Project: Collections
 
-Outline
--------
+## Outline
 
-Next, as a short section we&rsquo;ll be covering how to synchronize Backbone collections with the server. To this end, we&rsquo;ll convert the previous text-fields examples to communicate with a small Express server much like we did in the previous section. 
+Next, as a short section we'll be covering how to synchronize Backbone collections with the server. To this end, we'll convert the previous text-fields examples to communicate with a small Express server much like we did in the previous section. 
 
-Lesson and Code
----------------
+## Lesson and Code
 
-As usual, the first piece is our HTML which isn&rsquo;t going to change except for the filename:
+As usual, the first piece is our HTML which isn't going to change except for the filename:
 
 file: textlistServe.html
 
@@ -624,7 +595,7 @@ file: textlistServe.html
       </body>
     </html>
 
-Now we come to the client-side application. In the first place, we have our basic model and view. This model and view is going to be mostly similar to what we&rsquo;ve seen before. The main change that we make is that we call `.save` in the `replace` function of the model and call `fetch` in our initialization.
+Now we come to the client-side application. In the first place, we have our basic model and view. This model and view is going to be mostly similar to what we've seen before. The main change that we make is that we call `.save` in the `replace` function of the model and call `fetch` in our initialization.
 
 file: textlistServe.js
 
@@ -667,7 +638,7 @@ file: textlistServe.js
         }
     });
 
-The more significant changes come in our collection. First, note that we set the url **in the collection** rather than in the individual models, now. In fact, our `urlRoot` property from the last section is only to be used if we&rsquo;re planning to not use our models as part of a collection. 
+The more significant changes come in our collection. First, note that we set the url **in the collection** rather than in the individual models, now. In fact, our `urlRoot` property from the last section is only to be used if we're planning to not use our models as part of a collection. 
 
     var TextCollection = Backbone.Collection.extend({
         model : TextModel,
@@ -677,7 +648,7 @@ The more significant changes come in our collection. First, note that we set the
         }
     });
 
-For the view, we make a rather important change in the `addCollection` call: we need to now set the **ID** of each model. To simplify things, we&rsquo;re going to just assign all of our IDs on the client side, using a simple counter to keep each of the IDs unique by incrementing them. <sup><a id="fnr.2" name="fnr.2" class="footref" href="#fn.2">2</a></sup>
+For the view, we make a rather important change in the `addCollection` call: we need to now set the **ID** of each model. To simplify things, we're going to just assign all of our IDs on the client side, using a simple counter to keep each of the IDs unique by incrementing them. 
 
     var idCount = 0;
     
@@ -715,9 +686,9 @@ For the view, we make a rather important change in the `addCollection` call: we 
     
     });
 
-Finally, we have the server for our application. We&rsquo;re skipping over the preample that&rsquo;s identical, and instead we&rsquo;ll concentrate on the routes. To note, we&rsquo;re storing all of our examples in 
+Finally, we have the server for our application. We're skipping over the preample that's identical, and instead we'll concentrate on the routes. To note, we're storing all of our examples in 
 
-Here, we&rsquo;re going to have three different main routes. 
+Here, we're going to have three different main routes. 
 
 1.  a `get` route to `/texts/:id`, this is called when we `fetch` from the **TextModel** and we need to return the JSON object that packs up the value property from the `texts` array on the server
 2.  a `put` route to `/texts/:id`, which is called when we modify a TextModel
@@ -747,27 +718,23 @@ file: textlistServer.js
     
     app.listen(3000);
 
-Exercises
----------
+## Exercises
 
-1.  Deletion
+### Deletion
 
-    Now, try to replicate the previous exericse for adding a delete button to the client-only text list project for having a **server** as well. You&rsquo;ll need to create a route for the delete call to remove the element from the server.
-    
-    1.  Extra Credit
-    
-        Add a delete button to the view of the individual models that will allow you to remove that particular model from the collection. 
+Now, try to replicate the previous exericse for adding a delete button to the client-only text list project for having a **server** as well. You'll need to create a route for the delete call to remove the element from the server.
 
-Project Ideas
-=============
+1.  Extra Credit
 
-In our final section, we&rsquo;ll be covering a few ideas for small, self-contained Backbone projects.
+    Add a delete button to the view of the individual models that will allow you to remove that particular model from the collection. 
 
-Grocery List App
-----------------
+# Project Ideas
+
+In our final section, we'll be covering a few ideas for small, self-contained Backbone projects.
+
+## Grocery List App
 
 A reasonable plan of action is to
-
 -   define a model for a grocery list item. It should include a
     -   name
     -   price
@@ -780,44 +747,40 @@ A reasonable plan of action is to
     -   the view should include a button that will add a new model to the collection
 -   write a simple server that will keep all this data alive across refreshes of the page
 
-1.  Extra Credit
+### Extra Credit
 
-    Include one more piece of data: a budget. You&rsquo;ll need to make another model and view for the budget. In this case, though, you&rsquo;ll actually want the view for the budget to include **another** field that&rsquo;s the amount you have **left** after subtracting all the current groceries.
-    You can either
-    
-    -   have the remaining amount field recalculate when you click a button that&rsquo;s also in the budget&rsquo;s view
-    -   have the remaining amount field recalculate whenever you&rsquo;ve edited the grocery list
+Include one more piece of data: a budget. You'll need to make another model and view for the budget. In this case, though, you'll actually want the view for the budget to include **another** field that's the amount you have **left** after subtracting all the current groceries.
+You can either
+-   have the remaining amount field recalculate when you click a button that's also in the budget's view
+-   have the remaining amount field recalculate whenever you've edited the grocery list
 
-Sudoku Solver
--------------
+## Sudoku Solver
 
-If you&rsquo;ve completed the sudoku solver project from [Portland Code School&rsquo;s](http://portlandcodeschool.github.io/jsi/2015/06/16/sudoku/) Javascript course, then you can absolutely use Backbone to provide a front-end to the sudoku solver.
+If you've completed the sudoku solver project from [Portland Code School's](http://portlandcodeschool.github.io/jsi/2015/06/16/sudoku/) Javascript course, then you can absolutely use Backbone to provide a front-end to the sudoku solver.
 
-Since in your previous efforts, a sudoku puzzle was represented as a sequence of numbers it would be rather natural to have a puzzle be represented by a collection of individual models for each square. Of course, that&rsquo;s not the only way we could do things. In terms of **logical** layout, you might want to have *rows* that are collections of squares, and a *puzzle* is a collection of rows. 
+Since in your previous efforts, a sudoku puzzle was represented as a sequence of numbers it would be rather natural to have a puzzle be represented by a collection of individual models for each square. Of course, that's not the only way we could do things. In terms of **logical** layout, you might want to have *rows* that are collections of squares, and a *puzzle* is a collection of rows. 
 
 The basic outline of what you should do is:
-
 -   define a model and view for an individual cell
 -   define models and views for the entire puzzle
-    -   with the intermmediate step of defining models and views for rows if that&rsquo;s how you&rsquo;re planning to do it
+    -   with the intermmediate step of defining models and views for rows if that's how you're planning to do it
     -   add a button to the view that calls your solver on the server and then syncs the front end with the server
 
-1.  Extra Credit
+### Extra Credit
 
-    If you want to make your sudoku implementation more thorough, you can make it more interactive in terms of allowing users to create a sudoku puzzle from scratch by editing the fields. In this case, you might want to start with a completely **blank** puzzle and make the individual cells be editable. 
+If you want to make your sudoku implementation more thorough, you can make it more interactive in terms of allowing users to create a sudoku puzzle from scratch by editing the fields. In this case, you might want to start with a completely **blank** puzzle and make the individual cells be editable. 
 
-Anything You Want
------------------
+## Anything You Want
 
-Go ahead. You can actually try anything you&rsquo;d like.
+Go ahead. You can actually try anything you'd like.
 
 <div id="footnotes">
 <h2 class="footnotes">Footnotes: </h2>
 <div id="text-footnotes">
 
-<div class="footdef"><sup><a id="fn.1" name="fn.1" class="footnum" href="#fnr.1">1</a></sup> This section of the tutorial is partially inspired by the backbone &ldquo;todo list&rdquo; [tutorial](http://backbonejs.org/docs/todos.html)</div>
+<div class="footdef"><sup><a id="fn.1" name="fn.1" class="footnum" href="#fnr.1">1</a></sup> This section of the tutorial is partially inspired by the backbone "todo list" [tutorial](http://backbonejs.org/docs/todos.html)</div>
 
-<div class="footdef"><sup><a id="fn.2" name="fn.2" class="footnum" href="#fnr.2">2</a></sup> Now, there&rsquo;s an interesting caveat here: in my initial attempt at writing this code, I set the ID in the initialize method of the base model, not in the creation of a model. This seemed entirely reasonable and I couldn&rsquo;t find anything in the documentation that made it seem wrong, but in *reality* as far as I can tell if you try to set the ID in initialization, then every call to the model&rsquo;s `save` method will treat the model as being &ldquo;new&rdquo; as per the Backbone [documentation](http://backbonejs.org/#Model-isNew).</div>
+<div class="footdef"><sup><a id="fn.2" name="fn.2" class="footnum" href="#fnr.2">2</a></sup> Now, there's an interesting caveat here: in my initial attempt at writing this code, I set the ID in the initialize method of the base model, not in the creation of a model. This seemed entirely reasonable and I couldn't find anything in the documentation that made it seem wrong, but in *reality* as far as I can tell if you try to set the ID in initialization, then every call to the model's `save` method will treat the model as being "new" as per the Backbone [documentation](http://backbonejs.org/#Model-isNew).</div>
 
 
 </div>

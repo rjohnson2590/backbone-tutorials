@@ -45,7 +45,7 @@ If we divide things this way, the job of knowing how to write our code gets a bi
 
 Of course, there's going to be a lot of replication if we perform this model/view division for all the data in our web app and we *certainly* don't want to write a new framework for each application we work on. We also need to write the glue code that allows the server to communicate with the models, the models communicate with the views, and the views communicate with the DOM. This is where Backbone comes in. 
 
-Backbone is a library that comes with pre-defined model and view classes that you can easily customize for your particular application, with built in code and techniques to keep the models and views in sync with each other. As such, Backbone actually has a lot of the tedious code to setup this model/view dichotomy written once and for all, leaving you to worry about the specifics of your application and not the general problem of separating concerns. B
+Backbone is a library that comes with pre-defined model and view classes that you can easily customize for your particular application, with built in code and techniques to keep the models and views in sync with each other. As such, Backbone actually has a lot of the tedious code to setup this model/view dichotomy written once and for all, leaving you to worry about the specifics of your application and not the general problem of separating concerns.
 
 In this tutorial, we'll be covering how to use Backbone for applications. We'll be covering how to 
   + extend Backbone models
@@ -114,13 +114,8 @@ file: counter.html
   </html>
 #+END_SRC
 
-As for our javascript file ~counter.js~, don't forget to wrap up all our code in a ~$(document).ready(function () {})~.
 
-#+BEGIN_SRC js :exports none :tangle counter.js
-  $(document).ready( function () {
-#+END_SRC
-
-Now, the first thing we're going to do is build our /model/. As discussed in our introduction, a model is the thing that *contains* data in our application. All models are built by calling ~Backbone.Model.extend(some-object-with-built-in-data)~. We'll talk about the kinds of things we put in ~Backbone.Model.extend~ as we need them, but to begin with we're going to have a very *simple* model: our goal is to have a single special property called "value" that will contain the value of the counter and is going to be modified by our button. To that end, we are going to include the single property ~defaults~, which is a list of default values for the special data of our application. 
+Now, in our javascript file ~counter.js~, the first thing we're going to do is build our /model/. As discussed in our introduction, a model is the thing that *contains* data in our application. All models are built by calling ~Backbone.Model.extend(some-object-with-built-in-data)~. We'll talk about the kinds of things we put in ~Backbone.Model.extend~ as we need them, but to begin with we're going to have a very *simple* model: our goal is to have a single special property called "value" that will contain the value of the counter and is going to be modified by our button. To that end, we are going to include the single property ~defaults~, which is a list of default values for the special data of our application. 
 
 file: counter.js
 #+BEGIN_SRC js :exports code :tangle counter.js
@@ -148,7 +143,11 @@ The next thing we do in our code is make a /view/, which is going to be similar 
   });
 #+END_SRC
 
-The next thing we need to do is actually create instances of both our model and a view attached to said model:
+The next thing we need to do is actually create instances of both our model and a view attached to said model.  The instances need to use DOM elements, so they should be wrapped in a ~$(document).ready(function () {})~.
+
+#+BEGIN_SRC js :exports none :tangle counter.js
+  $(document).ready( function () {
+#+END_SRC
 
 #+BEGIN_SRC js :exports code :tangle counter.js
   var counterModel = new Counter();
@@ -170,7 +169,7 @@ model ===> view ===> DOM
 but what about the reverse direction?
 To do that, we're going to install an event handler on the button so that whenever it is clicked, the counter will increment
 #+BEGIN_SRC js :exports code  :tangle counter.js
-  counterView.$el.on("button click", function () {
+  counterView.$el.on("click","button", function () {
       var mod = counterView.model;
       var currVal = mod.get("value");
       mod.set("value",currVal+1);
@@ -197,7 +196,7 @@ Now, all that's left is to load our page and take a look!
    2. modify the existing event handler for the increment function to be more specific
    3. make a new decrement button event handler
 **** Bonus Challenge
-    Ensure that the counter *is not changed* if its value is equal to zero. In other words, not only should the counter's value not dip below 0 but the ~change~ event in the model shouldn't be triggered if the value is 0. Test and ensure it's not firing by placing a ~console.log~ statement in the ~change~ event handler
+    Ensure that the counter *is not decremented* if its value is equal to zero. In other words, not only should the counter's value not dip below 0 but the ~change~ event in the model shouldn't be triggered if the value is 0. Test and ensure it's not firing by placing a ~console.log~ statement in the ~change~ event handler
 *** Clear Button
     In addition to or perhaps in lieu of the previous exercise, add a button that resets the counter back to 0. Like the previous exercise, you'll need to
    1. modify the render function
@@ -205,9 +204,10 @@ Now, all that's left is to load our page and take a look!
    3. make a new button to reset the counter
 *** Concatenating Text Field
     In this exercise, you should start *from scratch* and write a new application that will have
-   + an input text field
-   + a button labled concatenate
-   + a place for the entered text to be displayed
+   + an input text field,
+   + a button labled concatenate,
+   + a place for the entered text to be displayed.
+    Whenever the button is pushed, the displayed text (stored in a model) should append to itself whatever string was input.
 ** Cleaning Up Our Code    
    There's a little bit of ugliness in our code that was there for the sake of pedagogical order: we're *manually* connecting the event handler for the model back to the view and we're also including too much logic of the *model* in the *view* event handlers. This wasn't so bad for our tiny example, but what if we want to have more than one instance of the model? It's going to be annoying to connect everything together correctly and rewrite the model handling code in each view. We're going to present a bit of a cleaned up version of the code that will be better refactored and show that it's easier to insert multiple model/view pairs into the application. We're going to go a little bit faster than the previous time.
      
@@ -227,10 +227,6 @@ Now, all that's left is to load our page and take a look!
   </html>
 #+END_SRC
 
-#+BEGIN_SRC js :exports none :tangle counterClean.js
-  $(document).ready( function () {
-#+END_SRC
-
 in our file counterClean.js
 #+BEGIN_SRC js :exports code :tangle counterClean.js
   var Counter = Backbone.Model.extend({
@@ -242,7 +238,7 @@ in our file counterClean.js
       this.set("value", val+1);
   }
 #+END_SRC
-The first thing we're doing is including a method in the ~Counter~ class for handling the incrementin. The next thing we're going to do is give the ~CounterView~ class an initialize method that will install the right event handler on the model that will cause the view to be updated whenever the model changes. For convenience, we're also going to use the "events" property of the view to make sure that we install the right event handler for the view upon its creation. 
+The first thing we're doing is including a method in the ~Counter~ class for handling the incrementing. The next thing we're going to do is give the ~CounterView~ class an initialize method that will install the right event handler on the model that will cause the view to be updated whenever the model changes. For convenience, we're also going to use the "events" property of the view to make sure that we install the right event handler for the view upon its creation. 
 #+BEGIN_SRC js :exports code :tangle counterClean.js
   var CounterView = Backbone.View.extend({
       render: function () {
@@ -261,22 +257,24 @@ The first thing we're doing is including a method in the ~Counter~ class for han
       }
   });
 #+END_SRC
-Now! We can go ahead and make our models and views and insert them into the DOM.
-#+BEGIN_SRC js :exports code :tangle counterClean.js
-  var counterModel1 = new Counter();
-  var counterModel2 = new Counter();
-
-  var counterView1 = new CounterView({model : counterModel1});
-  var counterView2 = new CounterView({model : counterModel2});
-
-  counterView1.render();
-  counterView2.render();
-
-  $("#counterdiv").append(counterView1.$el);
-  $("#counterdiv").append(counterView2.$el);
-#+END_SRC
+Now, within the ~$(document).ready~ wrapper, we can go ahead and make our models and views and insert them into the DOM.
 
 #+BEGIN_SRC js :exports none :tangle counterClean.js
+#+END_SRC
+
+#+BEGIN_SRC js :exports code :tangle counterClean.js
+  $(document).ready( function () {
+    var counterModel1 = new Counter();
+    var counterModel2 = new Counter();
+
+    var counterView1 = new CounterView({model : counterModel1});
+    var counterView2 = new CounterView({model : counterModel2});
+
+    counterView1.render();
+    counterView2.render();
+
+    $("#counterdiv").append(counterView1.$el);
+    $("#counterdiv").append(counterView2.$el);
   });
 #+END_SRC
 
@@ -299,7 +297,7 @@ What we're going to cover in this section is:
   + How to use the collection specific events to keep the view in-sync
 
 ** Lesson and Code
-When you're dealing with sites like twitter, or instagram, or anythig of that ilk there tend to be *collections* of things. You're reading a /list/ of tweets, looking at a /list/ of search results, examining a /list/ of photos that match a tag, checking a /list/ of followers etc. 
+When you're dealing with sites like twitter, or instagram, or anything of that ilk there tend to be *collections* of things. You're reading a /list/ of tweets, looking at a /list/ of search results, examining a /list/ of photos that match a tag, checking a /list/ of followers etc. 
 
 In other words, there's a lot of "list-like" things in the data that we're seeing constantly online. This is such a common pattern that Backbone has, built-in, a /Collection/ class that allows you to have "lists" of models that can listen for special list-specific events such as adding or removing from the list. 
 
@@ -332,7 +330,7 @@ We're going to start our application very similar to how our previous project st
   </html>
 #+END_SRC
  
-Next, we'll start with our basic model of a piece of text. It'll have a "replace" method that will replace the text inside it. It's individual view is going to be an input with the default text of the input set to the value of the model and a "clear" button that will set the text of the model to the empty string ~" "~ . This part is basically the same as our previous project, except that we're going to use a different *kind* of event, ~keypress~, for setting the value of the text of the model. In particular, if the key pressed in the input field is the "enter" key, then we call the ~replace~ operator of the view, which will in turn call the ~replace~ method of the model.
+Next, we'll start with our basic model of a piece of text. It'll have a "replace" method that will replace the text inside it. Its individual view is going to be an input with the default text of the input set to the value of the model and a "clear" button that will set the text of the model to the empty string ~" "~ . This part is basically the same as our previous project, except that we're going to use a different *kind* of event, ~keypress~, for setting the value of the text of the model. In particular, if the key pressed in the input field is the "enter" key, then we call the ~replace~ operator of the view, which will in turn call the ~replace~ method of the model.
 
 #+BEGIN_SRC js :exports none :tangle textlist.js
   $(document).ready( function () {
@@ -340,22 +338,23 @@ Next, we'll start with our basic model of a piece of text. It'll have a "replace
 
 #+BEGIN_SRC js :exports code :tangle textlist.js
   var TextModel = Backbone.Model.extend({
-      defaults : {"value" : ""}
+      defaults : {"value" : ""},
+      replace : function (str) {
+        this.set("value", str);
+      }
   });
-
-  TextModel.prototype.replace = function (str) {
-      this.set("value", str);
-  };
 
   var TextView = Backbone.View.extend({
       render: function () {
           var textVal = this.model.get("value");
           var btn = '<button>Clear</button>';
           var input = '<input type="text" value="' + textVal + '" />';
-          this.$el.html("<div>" + input + btn + "</div>");
+          this.$el.html(textVal+"<br><div>" + input + btn + "</div>");
       },
       initialize: function () {
           this.model.on("change", this.render, this);
+          // last argument 'this' ensures that render's
+          // 'this' means the view, not the model
       },
       events : {
           "click button" : "clear",
@@ -392,24 +391,29 @@ After this, we need to make our view for the *collection* and write our event ha
           this.$el.html(div + btn);
       },
       initialize : function () {
-          this.listenTo(this.collection, 'add', this.addOne);
+          this.listenTo(this.collection, 'add', this.addView);
       },
       events : {
-          "click #addbutton" : "addCollection"
+          "click #addbutton" : "addModel"
       },
-      addOne : function (txt) {
-          txt.set("value","Enter something here...");
-          var view = new TextView({model : txt});
+      addModel : function () {
+          this.collection.add({});
+          // collection adds a model, fires add event, then listener calls this.addView(model)
+      },
+      addView : function (newModel) {
+          newModel.set("value","Enter something here...");
+          var view = new TextView({model : newModel});
           view.render();
           this.$("#text-list").append(view.$el);
       },
-      addCollection : function () {
-          this.collection.create();
-      }
   });
 #+END_SRC
 
-There's a few pieces here that we should explain in a bit more detail. First, we're using the more convenient function ~listenTo~ this time, which in this case means that ~this.collection~ is now listening on the ~add~ event and, when it fires, will run ~this.addOne~ *in the context of the view, not the collection*. Basically, this just lets us avoid including the extra ~this~ parameter like in our individual model. Calling ~addOne~ takes the newly added model, creates a view for it, renders it, then adds it to the list of views. We use ~events~ to listen for when the button is clicked and then we run ~addCollection~. In turn, ~addCollection~ will call the ~create~ method of the collection. The importance of ~create~ is that it will simultaneously make a new model and add it to the collection, triggering the ~add~ event that we're already listening for. 
+There's a few pieces here that we should explain in a bit more detail. First, we're using the more convenient function ~listenTo~ this time, which in this case means that ~this.collection~ is now listening on the ~add~ event and, when it fires, will run ~this.addView~ with the new model as an argument.  Also, ~listenTo~ calls the event handler *in the context of the view, not the collection*, so that ~this~ means the view. Basically, this just lets us avoid including the extra ~this~ parameter like in our individual model. Calling ~addView~ takes the newly added model, creates a view for it, renders it, then adds it to the list of views. We use ~events~ to listen for when the button is clicked and then we run ~addModel~. In turn, ~addModel~ will call the ~add~ method of the collection. The importance of ~add~ is that it will simultaneously make a new model and add it to the collection, triggering the ~add~ event that we're already listening for. 
+
+<aside>
+Collections also have a /create/ method, which works just like /add/ but also persists the new model to a server if there is one.
+</aside>
 
 Note that we don't have to say *anything* in the view for the collection about how the view of the individual model works. We just call that individual view's render function and allow it to take care of everything. 
 
@@ -432,9 +436,9 @@ Finally, we go ahead and run the code we need to initialize the whole applicatio
 ** Exercises
 *** Delete Button
     In this exercise, we're going to add a "delete" button that will erase the bottom element of the list of elements. To do that, you're going to need to 
-   + add a delete button to the view of the *collection*
+   + add a delete button to the view of the *collection*;
    + add a event handler that listens for the "remove" event for the collection and refreshes the list, removing the corresponding view from the DOM.
-     + there's more than one way you could do this, but a simple way might be to use CSS psuedo-selectors to select only the last div in the collection
+    There's more than one way you could do this, but a simple way might be to use CSS pseudo-selectors to select only the last div in the collection
 *** Edited Count
     In this exercise, you're going to add a new piece of data to the *base* model: the number of times that it's been edited. Every time the field is edited, it should increment this number. In this case, "edited" means *either* cleared or you've pressed enter while in the input field. You'll need to also modify the view for the base model. 
     Question: will you need to modify the view for the collection?

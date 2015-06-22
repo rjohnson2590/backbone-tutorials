@@ -1,6 +1,4 @@
 
-$(document).ready( function () {
-
 var Counter = Backbone.Model.extend({
     defaults : {"value" : 0}
 });
@@ -27,16 +25,18 @@ var CounterView = Backbone.View.extend({
     }
 });
 
-var counterModel1 = new Counter();
-var counterModel2 = new Counter();
 
-var counterView1 = new CounterView({model : counterModel1});
-var counterView2 = new CounterView({model : counterModel2});
 
-counterView1.render();
-counterView2.render();
+$(document).ready( function () {
+  var counterModel1 = new Counter();
+  var counterModel2 = new Counter();
 
-$("#counterdiv").append(counterView1.$el);
-$("#counterdiv").append(counterView2.$el);
+  var counterView1 = new CounterView({model : counterModel1});
+  var counterView2 = new CounterView({model : counterModel2});
 
+  counterView1.render();
+  counterView2.render();
+
+  $("#counterdiv").append(counterView1.$el);
+  $("#counterdiv").append(counterView2.$el);
 });
