@@ -26,13 +26,13 @@ var CounterView = Backbone.View.extend({
 });
 
 
-
+var counterView1, counterView2, counterModel1, counterModel2
 $(document).ready( function () {
-  var counterModel1 = new Counter();
-  var counterModel2 = new Counter();
+   counterModel1 = new Counter();
+   counterModel2 = new Counter();
 
-  var counterView1 = new CounterView({model : counterModel1});
-  var counterView2 = new CounterView({model : counterModel2});
+  counterView1 = new CounterView({model : counterModel1});
+   counterView2 = new CounterView({model : counterModel2});
 
   counterView1.render();
   counterView2.render();

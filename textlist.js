@@ -45,8 +45,9 @@ var TextCollection = Backbone.Collection.extend({
 var TextCollectionView = Backbone.View.extend({
     render : function () {
         var btn = '<button id="addbutton">Add Text</button>';
+        var btnD = '<button id="deletebutton">delete Text</button>'
         var div = '<div id="text-list"></div>';
-        this.$el.html(div + btn);
+        this.$el.html(div + btn+btnD);
     },
     initialize : function () {
         this.listenTo(this.collection, 'add', this.addView);
