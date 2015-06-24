@@ -15,6 +15,7 @@ var sudokuCollectionView;
 var coll; 
 var view;
 var rend;
+var board;
 $(document).ready( function () {
 
 var SudokuModel = Backbone.Model.extend({
@@ -49,6 +50,32 @@ var SudokuCollectionView = Backbone.View.extend({
 		for(var i=0; i<rend.models.length;i++){
 			newNums.push(rend.models[i].attributes.value)
 		}
+
+		// board = ['+---------+---------+---------+',
+		// 	 '| x  x  x | y  x  y | y  x  y |',
+		// 	 '  x  y  y | y  x  y | y  x  y |',
+		// 	 '| y  x  y | y  x  y | x  y  x |',
+		// 	 '+---------+---------+---------+',
+		// 	 '| y  x  y | x  x  y | y  y  y |',
+		// 	 '  y  y  x | y  x  y | x  y  y |',
+		// 	 '| y  y  y | y  x  x | y  x  y |',
+		// 	 '+---------+---------+---------+',
+		// 	 '| x  y  x | y  x  y | y  x  y |',
+		// 	 '  y  x  y | y  x  y | y  y  x |',
+		// 	 '| y  x  y | y  x  y | x  x  x |',
+		// 	 '+---------+---------+---------+' ]
+
+		// 	for(var j =0; j<board.length; j++){
+		// 		for(var h =0; h<board[j].length; h++){
+		// 			if(board[j][h]=='x'){
+		// 				board[j][h]='k'
+		// 			}
+		// 		}
+		// 		console.log(board)
+		// 	}
+
+
+
 		var arr1= newNums.slice(0,9).join('&nbsp&nbsp&nbsp&nbsp')
 		var arr2= newNums.slice(9,18).join('&nbsp&nbsp&nbsp&nbsp')
 		var arr3= newNums.slice(18,27).join('&nbsp&nbsp&nbsp&nbsp')
@@ -122,19 +149,19 @@ $("#listdiv").append(sudokuCollectionView.$el);
     
 // });
 
-var board = ['+---------+---------+---------+',
-			 '| x  x  x | y  x  y | y  x  y |',
-			 '  x  y  y | y  x  y | y  x  y |',
-			 '| y  x  y | y  x  y | x  y  x |',
-			 '+---------+---------+---------+',
-			 '| y  x  y | x  x  y | y  y  y |',
-			 '  y  y  x | y  x  y | x  y  y |',
-			 '| y  y  y | y  x  x | y  x  y |',
-			 '+---------+---------+---------+',
-			 '| x  y  x | y  x  y | y  x  y |',
-			 '  y  x  y | y  x  y | y  y  x |',
-			 '| y  x  y | y  x  y | x  x  x |',
-			 '+---------+---------+---------+' ]
+// var board = ['+---------+---------+---------+',
+// 			 '| x  x  x | y  x  y | y  x  y |',
+// 			 '  x  y  y | y  x  y | y  x  y |',
+// 			 '| y  x  y | y  x  y | x  y  x |',
+// 			 '+---------+---------+---------+',
+// 			 '| y  x  y | x  x  y | y  y  y |',
+// 			 '  y  y  x | y  x  y | x  y  y |',
+// 			 '| y  y  y | y  x  x | y  x  y |',
+// 			 '+---------+---------+---------+',
+// 			 '| x  y  x | y  x  y | y  x  y |',
+// 			 '  y  x  y | y  x  y | y  y  x |',
+// 			 '| y  x  y | y  x  y | x  x  x |',
+// 			 '+---------+---------+---------+' ]
 
 
 
