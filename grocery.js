@@ -6,6 +6,7 @@ var view;
 $(document).ready( function () {
 var Grocery = Backbone.Model.extend({
 	defaults : {'id':0,'name':'', 'price' : 0, "quantity" : 0},
+
 		initialize : function () {
 			this.fetch();
 		},
@@ -20,9 +21,13 @@ var Grocery = Backbone.Model.extend({
 		quantityReplace : function (str) {
 			this.set('quantity', str);
 			this.save();
-	}
+	},
+	urlRoot : '/grocerys'
 
 });
+
+	// var grocery1= new Grocery()
+	// grocery1.fetch();
 
 
 
