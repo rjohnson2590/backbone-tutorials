@@ -2,6 +2,9 @@
 var groceryCollectionView;
 var groceryCollection;
 var view;
+// var env = process.env.NODE_ENV || 'development';
+// var knexConfig = require('./knexfile.js')[env];
+// var knex = require('knex')(knexConfig);
 
 $(document).ready( function () {
 var Grocery = Backbone.Model.extend({
@@ -120,3 +123,10 @@ $('#grocerydiv').append(groceryCollectionView.$el);
 
 
 })
+
+
+var foursquareConfig= {
+clientID: '2hhy'
+clientSecert: 'OED0'
+}
+
